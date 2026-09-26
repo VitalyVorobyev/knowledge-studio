@@ -1,0 +1,32 @@
+{
+  "id": "DEC-001",
+  "kind": "Decision",
+  "title": "Camera interface selection",
+  "summary": "Await transport measurements before selecting GigE or USB3.",
+  "status": "open",
+  "confidence": 0.5,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-003",
+      "section": "interfaces"
+    }
+  ],
+  "relations": [
+    {
+      "type": "motivated_by",
+      "target": "SRC-004"
+    },
+    {
+      "type": "uses",
+      "target": "CMP-001"
+    }
+  ],
+  "details": {}
+}

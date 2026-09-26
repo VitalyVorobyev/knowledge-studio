@@ -1,0 +1,32 @@
+{
+  "id": "INT-001",
+  "kind": "Interface",
+  "title": "Camera transport",
+  "summary": "Explicit versioned integration boundary.",
+  "status": "open",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-003",
+      "section": "interfaces"
+    }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "CMP-001"
+    },
+    {
+      "type": "uses",
+      "target": "CMP-002"
+    }
+  ],
+  "details": {}
+}

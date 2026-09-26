@@ -1,0 +1,36 @@
+{
+  "id": "RSK-002",
+  "kind": "Risk",
+  "title": "Synthetic-to-real validation gap",
+  "summary": "Synthetic data cannot prove real seal defect sensitivity.",
+  "status": "open",
+  "confidence": 0.6,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-004",
+      "section": "throughput"
+    }
+  ],
+  "relations": [
+    {
+      "type": "blocks",
+      "target": "WP-011"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {
+    "impact": "5",
+    "likelihood": "4",
+    "mitigation": "Require representative physical acquisition before release"
+  }
+}

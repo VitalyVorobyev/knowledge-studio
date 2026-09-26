@@ -1,0 +1,32 @@
+{
+  "id": "DEC-003",
+  "kind": "Decision",
+  "title": "Use offline model inference",
+  "summary": "Cloud inference excluded from the operational path.",
+  "status": "accepted",
+  "confidence": 0.95,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-003",
+      "section": "security"
+    }
+  ],
+  "relations": [
+    {
+      "type": "motivated_by",
+      "target": "SRC-003"
+    },
+    {
+      "type": "uses",
+      "target": "CMP-006"
+    }
+  ],
+  "details": {}
+}

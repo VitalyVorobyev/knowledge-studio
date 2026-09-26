@@ -1,0 +1,47 @@
+{
+  "id": "MS-002",
+  "kind": "Milestone",
+  "title": "Engineering prototype",
+  "summary": "Gate requires evidence, not just completion of tasks.",
+  "status": "planned",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "WP-006"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-007"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-008"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-009"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-010"
+    }
+  ],
+  "details": {
+    "gate": "Latency and acquisition assumptions measured",
+    "target_date": "2027-01-15"
+  }
+}

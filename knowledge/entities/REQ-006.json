@@ -1,0 +1,32 @@
+{
+  "id": "REQ-006",
+  "kind": "Requirement",
+  "title": "Setup ≤ 15 minutes",
+  "summary": "Assumption: full recipe setup; conflicts with 10-minute marketing target.",
+  "status": "assumption",
+  "confidence": 0.4,
+  "owner": "OWN-003",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "slide-12"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implements",
+      "target": "CAP-004"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-003"
+    }
+  ],
+  "details": {}
+}

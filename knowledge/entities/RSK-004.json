@@ -1,0 +1,36 @@
+{
+  "id": "RSK-004",
+  "kind": "Risk",
+  "title": "PLC timing variance",
+  "summary": "Late reject output can mismatch trays.",
+  "status": "open",
+  "confidence": 0.6,
+  "owner": "OWN-004",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-004",
+      "section": "throughput"
+    }
+  ],
+  "relations": [
+    {
+      "type": "blocks",
+      "target": "WP-003"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    }
+  ],
+  "details": {
+    "impact": "5",
+    "likelihood": "2",
+    "mitigation": "Jitter profiling with hardware-in-loop before release"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "CAP-002",
+  "kind": "Capability",
+  "title": "Synchronized image acquisition",
+  "summary": "Product capability: synchronized image acquisition.",
+  "status": "active",
+  "confidence": 0.75,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {}
+}

@@ -1,0 +1,22 @@
+{
+  "id": "SRC-006",
+  "kind": "Source",
+  "title": "PM change request CR-01",
+  "summary": "Synthetic source document with stable section anchors.",
+  "status": "accepted",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [],
+  "relations": [],
+  "details": {
+    "acceptance": "Measure synchronized acquisition and end-to-end latency. Re-estimate integration and throughput testing; review thermal risk and milestone dates. Do not claim that a proposed target has been validated.",
+    "file": "pm-change.md",
+    "request": "PackInspect must support four cameras instead of two and 120 parts/min instead of 80. This synthetic request is staged for review; it is not part of the accepted baseline."
+  }
+}

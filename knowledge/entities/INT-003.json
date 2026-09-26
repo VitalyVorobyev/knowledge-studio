@@ -1,0 +1,32 @@
+{
+  "id": "INT-003",
+  "kind": "Interface",
+  "title": "Recipe bundle contract",
+  "summary": "Explicit versioned integration boundary.",
+  "status": "accepted",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-003",
+      "section": "security"
+    }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "CMP-005"
+    },
+    {
+      "type": "uses",
+      "target": "CMP-006"
+    }
+  ],
+  "details": {}
+}

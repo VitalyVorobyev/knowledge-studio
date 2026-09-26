@@ -1,0 +1,55 @@
+{
+  "id": "WP-012",
+  "kind": "WorkPackage",
+  "title": "Verify offline security posture",
+  "summary": "A verifiable engineering outcome with explicit uncertainty.",
+  "status": "planned",
+  "confidence": 0.8,
+  "owner": "OWN-004",
+  "effort": [
+    2,
+    4
+  ],
+  "outcome": "Threat model and configuration abuse report",
+  "work_type": "integration",
+  "validation_criterion": "Unsigned imports denied and audit trail complete",
+  "skill": "Validation / security",
+  "milestone": "MS-003",
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "WP-008"
+    },
+    {
+      "type": "implemented_in",
+      "target": "REP-004"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-006"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-009"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-010"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    }
+  ],
+  "details": {}
+}

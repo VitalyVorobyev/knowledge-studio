@@ -1,0 +1,23 @@
+{
+  "id": "SRC-005",
+  "kind": "Source",
+  "title": "Synthetic dataset catalog",
+  "summary": "Synthetic source document with stable section anchors.",
+  "status": "accepted",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [],
+  "relations": [],
+  "details": {
+    "clean": "DATA-001: 2,400 synthetic clean trays across four recipe variants. Generated labels, no customer imagery.",
+    "defects": "DATA-002: 600 synthetic defects, including folds and contamination. Intended for pipeline development only; cannot establish real-world accuracy.",
+    "file": "datasets.md",
+    "shift": "DATA-003: 300 synthetic lighting and pose shifts. Camera-corner coverage is missing; new acquisition research is required."
+  }
+}

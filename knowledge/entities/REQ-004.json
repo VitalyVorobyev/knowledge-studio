@@ -1,0 +1,32 @@
+{
+  "id": "REQ-004",
+  "kind": "Requirement",
+  "title": "False reject rate ≤ 1%",
+  "summary": "Evaluate by recipe and defect stratum.",
+  "status": "accepted",
+  "confidence": 0.8,
+  "owner": "OWN-004",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implements",
+      "target": "CAP-001"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    }
+  ],
+  "details": {}
+}

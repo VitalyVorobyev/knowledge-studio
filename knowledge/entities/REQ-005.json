@@ -1,0 +1,32 @@
+{
+  "id": "REQ-005",
+  "kind": "Requirement",
+  "title": "Reject acknowledgement ≤ 150 ms",
+  "summary": "Budget includes acquisition, inference and PLC.",
+  "status": "accepted",
+  "confidence": 0.8,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implements",
+      "target": "CAP-003"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {}
+}

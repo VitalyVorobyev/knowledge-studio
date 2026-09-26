@@ -1,0 +1,42 @@
+{
+  "id": "CMP-006",
+  "kind": "Component",
+  "title": "Recipe & audit service",
+  "summary": "Recipe & audit service boundary in the synthetic edge system.",
+  "status": "proposed",
+  "confidence": 0.75,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "CMP-005"
+    },
+    {
+      "type": "implemented_in",
+      "target": "REP-001"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-006"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {
+    "deployment": "Offline edge PC"
+  }
+}

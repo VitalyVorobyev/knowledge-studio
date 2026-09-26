@@ -1,0 +1,47 @@
+{
+  "id": "VAL-005",
+  "kind": "Validation",
+  "title": "Setup usability study",
+  "summary": "Protocol and planned evidence for the release dossier.",
+  "status": "planned",
+  "confidence": 0.75,
+  "owner": "OWN-004",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    },
+    {
+      "type": "uses",
+      "target": "DATA-002"
+    },
+    {
+      "type": "validates",
+      "target": "REQ-006"
+    },
+    {
+      "type": "validates",
+      "target": "REQ-007"
+    },
+    {
+      "type": "validates",
+      "target": "REQ-008"
+    }
+  ],
+  "details": {
+    "method": "Versioned protocol, reproducible input and reviewer sign-off",
+    "result": "No execution evidence yet"
+  }
+}

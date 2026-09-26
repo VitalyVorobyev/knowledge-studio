@@ -1,0 +1,32 @@
+{
+  "id": "DATA-003",
+  "kind": "Dataset",
+  "title": "Lighting & pose shifts",
+  "summary": "Synthetic catalog entry; imagery is not bundled and no measured performance is implied.",
+  "status": "blocked",
+  "confidence": 0.75,
+  "owner": "OWN-004",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-005",
+      "section": "shift"
+    }
+  ],
+  "relations": [
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    }
+  ],
+  "details": {
+    "provenance": "Synthetic only",
+    "samples": "300",
+    "split": "Recipe-stratified holdout"
+  }
+}

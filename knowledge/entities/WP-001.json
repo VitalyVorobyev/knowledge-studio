@@ -1,0 +1,47 @@
+{
+  "id": "WP-001",
+  "kind": "WorkPackage",
+  "title": "Capture synchronized image pairs",
+  "summary": "A verifiable engineering outcome with explicit uncertainty.",
+  "status": "active",
+  "confidence": 0.8,
+  "owner": "OWN-002",
+  "effort": [
+    2,
+    4
+  ],
+  "outcome": "Two streams produce timestamped pairs",
+  "work_type": "integration",
+  "validation_criterion": "10,000 pairs with no missing sequence",
+  "skill": "Rust / acquisition / PLC",
+  "milestone": "MS-001",
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implemented_in",
+      "target": "REP-002"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-002"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-002"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {}
+}

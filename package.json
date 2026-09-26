@@ -1,0 +1,38 @@
+{
+  "name": "packinspect-knowledge-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "web": "vite --host 127.0.0.1 --port 1420",
+    "build": "tsc -b && vite build",
+    "desktop:build": "tauri build --bundles app",
+    "test": "vitest run && cargo test --manifest-path src-tauri/Cargo.toml --lib",
+    "lint": "tsc -b && prettier --check app *.json *.ts",
+    "format": "prettier --write app *.json *.ts",
+    "validate": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- validate",
+    "demo:apply": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- demo apply",
+    "demo:reset": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- demo reset"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@xyflow/react": "^12.0.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.0",
+    "vitest": "^4.1.11"
+  }
+}
