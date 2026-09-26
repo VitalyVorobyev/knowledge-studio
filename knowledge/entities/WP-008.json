@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-002",
   "effort": [
-    2,
-    4
+    2.0,
+    4.0
   ],
   "outcome": "Signed versioned recipes with rollback",
   "work_type": "known",

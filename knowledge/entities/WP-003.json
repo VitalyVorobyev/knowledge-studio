@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-002",
   "effort": [
-    3,
-    5
+    3.0,
+    5.0
   ],
   "outcome": "Trigger → inference → PLC acknowledgement",
   "work_type": "integration",
@@ -23,6 +23,10 @@
     {
       "source": "SRC-004",
       "section": "release"
+    },
+    {
+      "source": "SRC-002",
+      "section": "plc"
     }
   ],
   "relations": [

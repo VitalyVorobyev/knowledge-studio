@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-003",
   "effort": [
-    2,
-    5
+    2.0,
+    5.0
   ],
   "outcome": "Full recipe setup timed by independent tester",
   "work_type": "integration",
@@ -23,6 +23,10 @@
     {
       "source": "SRC-004",
       "section": "release"
+    },
+    {
+      "source": "SRC-004",
+      "section": "setup"
     }
   ],
   "relations": [

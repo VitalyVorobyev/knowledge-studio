@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-002",
   "effort": [
-    2,
-    4
+    2.0,
+    4.0
   ],
   "outcome": "Two streams produce timestamped pairs",
   "work_type": "integration",
@@ -23,6 +23,10 @@
     {
       "source": "SRC-004",
       "section": "release"
+    },
+    {
+      "source": "SRC-002",
+      "section": "acquisition"
     }
   ],
   "relations": [

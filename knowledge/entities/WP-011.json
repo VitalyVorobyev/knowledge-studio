@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-004",
   "effort": [
-    4,
-    6
+    4.0,
+    6.0
   ],
   "outcome": "Published validation dossier for release gate",
   "work_type": "integration",

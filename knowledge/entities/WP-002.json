@@ -7,8 +7,8 @@
   "confidence": 0.45,
   "owner": "OWN-002",
   "effort": [
-    2,
-    5
+    2.0,
+    5.0
   ],
   "outcome": "USB3 and GigE comparison report",
   "work_type": "research",
@@ -23,6 +23,10 @@
     {
       "source": "SRC-004",
       "section": "release"
+    },
+    {
+      "source": "SRC-003",
+      "section": "interfaces"
     }
   ],
   "relations": [

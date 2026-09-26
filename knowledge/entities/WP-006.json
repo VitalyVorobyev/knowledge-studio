@@ -7,8 +7,8 @@
   "confidence": 0.45,
   "owner": "OWN-002",
   "effort": [
-    3,
-    6
+    3.0,
+    6.0
   ],
   "outcome": "Repeatable eight-hour load test report",
   "work_type": "research",
@@ -23,6 +23,10 @@
     {
       "source": "SRC-004",
       "section": "release"
+    },
+    {
+      "source": "SRC-003",
+      "section": "latency"
     }
   ],
   "relations": [

@@ -674,6 +674,14 @@ mod tests {
             let parsed: Entity = serde_json::from_str(&one).unwrap();
             assert_eq!(one, json(&parsed).unwrap());
             assert!(one.ends_with('\n'));
+            assert_eq!(
+                one,
+                fs::read_to_string(
+                    s.root
+                        .join(format!("knowledge/entities/{}.json", entity.id))
+                )
+                .unwrap()
+            );
         }
     }
     #[test]

@@ -7,8 +7,8 @@
   "confidence": 0.8,
   "owner": "OWN-004",
   "effort": [
-    2,
-    4
+    2.0,
+    4.0
   ],
   "outcome": "Threat model and configuration abuse report",
   "work_type": "integration",

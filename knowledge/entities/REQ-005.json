@@ -16,6 +16,10 @@
     {
       "source": "SRC-001",
       "section": "scope"
+    },
+    {
+      "source": "SRC-002",
+      "section": "plc"
     }
   ],
   "relations": [

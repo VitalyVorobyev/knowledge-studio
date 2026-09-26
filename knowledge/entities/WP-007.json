@@ -7,8 +7,8 @@
   "confidence": 0.45,
   "owner": "OWN-001",
   "effort": [
-    3,
-    7
+    3.0,
+    7.0
   ],
   "outcome": "Evaluate optional foundation features offline",
   "work_type": "research",
