@@ -333,6 +333,11 @@ export function App() {
                 },
               })
             }
+            onResetLayout={() => {
+              const layouts = { ...snapshot!.views.layouts };
+              delete layouts[page];
+              saveViews({ ...snapshot!.views, layouts });
+            }}
           />
         ) : (
           <div className="empty">No nodes match these filters.</div>

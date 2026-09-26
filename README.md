@@ -32,6 +32,8 @@ The app does not commit changes. Review the selected repository's Git diff after
 
 On **Work packages**, use **New work package** to record a verifiable outcome and cite an existing source section. Optional owner, milestone, dependency and effort may stay unknown. The inspector edits the package text and metadata. Deletion requires a second action and is blocked until all incoming relations are removed; it also clears saved layout and provisional planning for that package. Newly created files appear in **Review diff** even before staging. UI writes never commit automatically.
 
+Maps with few explicit relationships open in **Connected** focus, with unlinked entities listed below; **All entities** shows the complete type-grouped grid. Edge labels and colors identify relation types. Manually dragged positions still take precedence, and **Reset layout** removes the selected map's saved positions so its automatic layout can be applied again.
+
 ## Repository layout
 
 - `app/` — React/TypeScript views, graph, timeline and inspector.
