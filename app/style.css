@@ -767,7 +767,7 @@ td:first-child {
 }
 .react-flow__node-default {
   font-family: inherit !important;
-  border: 1px solid #d8e2d5 !important;
+  border: 1px solid #d8e2d5;
   background: #fffefa !important;
   border-radius: 5px !important;
   padding: 13px 15px !important;
