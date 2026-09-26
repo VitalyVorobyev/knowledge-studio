@@ -14,6 +14,7 @@ export function Inspector({
   onClose,
   onSelect,
   onSave,
+  onDelete,
   editable,
   busy,
 }: {
@@ -22,12 +23,14 @@ export function Inspector({
   onClose: () => void;
   onSelect: (id: string) => void;
   onSave: (e: Entity) => void;
+  onDelete: (id: string) => void;
   editable: boolean;
   busy: boolean;
 }) {
   const [draft, setDraft] = useState<Entity>(structuredClone(entity));
   const [relType, setRelType] = useState("depends_on");
   const [target, setTarget] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(entity);
   const lookup = (id: string) => snapshot.entities.find((e) => e.id === id);
   function owner(value: string) {
@@ -51,8 +54,34 @@ export function Inspector({
         </button>
       </header>
       <div className="inspector-body">
-        <h2>{entity.title}</h2>
-        <p>{entity.summary}</p>
+        {editable && entity.kind === "WorkPackage" ? (
+          <>
+            <label>
+              Title
+              <input
+                aria-label="Work package title"
+                value={draft.title}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              />
+            </label>
+            <label>
+              Summary
+              <textarea
+                aria-label="Work package summary"
+                value={draft.summary}
+                onChange={(e) =>
+                  setDraft({ ...draft, summary: e.target.value })
+                }
+                rows={2}
+              />
+            </label>
+          </>
+        ) : (
+          <>
+            <h2>{entity.title}</h2>
+            <p>{entity.summary}</p>
+          </>
+        )}
         {entity.details.change_request && (
           <div className="change-badge">
             Changed by {entity.details.change_request}
@@ -107,36 +136,166 @@ export function Inspector({
               ))}
           </select>
         </label>
-        {entity.outcome && (
+        {entity.kind === "WorkPackage" && (
           <>
             <div className="section-label">Verifiable outcome</div>
-            <p>{entity.outcome}</p>
-            <div className="criterion">{entity.validation_criterion}</div>
-            <dl>
-              <dt>Effort range</dt>
-              <dd>
-                {entity.effort
-                  ? `${entity.effort.join("–")} person-weeks`
-                  : "Unknown"}
-              </dd>
-              <dt>Work type</dt>
-              <dd>{entity.work_type ?? "Unknown"}</dd>
-              <dt>Skill area</dt>
-              <dd>{entity.skill ?? "Unknown"}</dd>
-              <dt>Milestone</dt>
-              <dd>
-                {entity.milestone ? (
+            {editable ? (
+              <>
+                <label>
+                  Outcome
+                  <textarea
+                    aria-label="Work package outcome"
+                    value={draft.outcome ?? ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, outcome: e.target.value })
+                    }
+                    rows={2}
+                  />
+                </label>
+                <label>
+                  Validation criterion
+                  <textarea
+                    aria-label="Work package validation criterion"
+                    value={draft.validation_criterion ?? ""}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        validation_criterion: e.target.value,
+                      })
+                    }
+                    rows={2}
+                  />
+                </label>
+                <label>
+                  Work type
+                  <select
+                    value={draft.work_type ?? ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, work_type: e.target.value || null })
+                    }
+                  >
+                    <option value="">Unknown</option>
+                    <option value="known">Known</option>
+                    <option value="integration">Integration</option>
+                    <option value="research">Research</option>
+                  </select>
+                </label>
+                <label>
+                  Skill area
+                  <input
+                    value={draft.skill ?? ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, skill: e.target.value || null })
+                    }
+                  />
+                </label>
+                <label>
+                  Milestone
+                  <select
+                    value={draft.milestone ?? ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, milestone: e.target.value || null })
+                    }
+                  >
+                    <option value="">Unknown</option>
+                    {snapshot.entities
+                      .filter((e) => e.kind === "Milestone")
+                      .map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </>
+            ) : (
+              <>
+                <p>{entity.outcome}</p>
+                <div className="criterion">{entity.validation_criterion}</div>
+              </>
+            )}
+            {editable ? (
+              <>
+                <div className="edit-grid">
+                  <label>
+                    Effort min · person-weeks
+                    <input
+                      aria-label="Effort minimum"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={draft.effort?.[0] ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const min = Number(value);
+                        setDraft({
+                          ...draft,
+                          effort:
+                            value === ""
+                              ? null
+                              : [min, Math.max(min, draft.effort?.[1] ?? min)],
+                        });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    Effort max · person-weeks
+                    <input
+                      aria-label="Effort maximum"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={draft.effort?.[1] ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const max = Number(value);
+                        setDraft({
+                          ...draft,
+                          effort:
+                            value === ""
+                              ? null
+                              : [Math.min(max, draft.effort?.[0] ?? max), max],
+                        });
+                      }}
+                    />
+                  </label>
+                </div>
+                {draft.effort && (
                   <button
                     className="text-button"
-                    onClick={() => onSelect(entity.milestone!)}
+                    onClick={() => setDraft({ ...draft, effort: null })}
                   >
-                    {lookup(entity.milestone)?.title}
+                    Clear estimate
                   </button>
-                ) : (
-                  "Unknown"
                 )}
-              </dd>
-            </dl>
+              </>
+            ) : (
+              <dl>
+                <dt>Effort range</dt>
+                <dd>
+                  {entity.effort
+                    ? `${entity.effort.join("–")} person-weeks`
+                    : "Unknown"}
+                </dd>
+                <dt>Work type</dt>
+                <dd>{entity.work_type ?? "Unknown"}</dd>
+                <dt>Skill area</dt>
+                <dd>{entity.skill ?? "Unknown"}</dd>
+                <dt>Milestone</dt>
+                <dd>
+                  {entity.milestone ? (
+                    <button
+                      className="text-button"
+                      onClick={() => onSelect(entity.milestone!)}
+                    >
+                      {lookup(entity.milestone)?.title}
+                    </button>
+                  ) : (
+                    "Unknown"
+                  )}
+                </dd>
+              </dl>
+            )}
           </>
         )}
         {entity.kind === "Source" && (
@@ -299,6 +458,46 @@ export function Inspector({
           ))
         ) : (
           <p className="muted">Source document is a root evidence item.</p>
+        )}
+        {editable && entity.kind === "WorkPackage" && (
+          <div className="delete-section">
+            <div className="section-label">Remove work package</div>
+            {(snapshot.backlinks[entity.id]?.length ?? 0) > 0 ? (
+              <p>
+                Remove the {snapshot.backlinks[entity.id].length} incoming
+                references shown above before deleting this file.
+              </p>
+            ) : (
+              <>
+                <p>
+                  Deletes this entity file and its saved layout and provisional
+                  plan. Git can restore the file.
+                </p>
+                {deleteConfirm ? (
+                  <div className="delete-actions">
+                    <button onClick={() => setDeleteConfirm(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      className="danger"
+                      disabled={busy}
+                      onClick={() => onDelete(entity.id)}
+                    >
+                      Delete {entity.id}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="danger"
+                    disabled={busy}
+                    onClick={() => setDeleteConfirm(true)}
+                  >
+                    <Trash2 size={14} /> Delete work package…
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
       <footer>

@@ -20,6 +20,7 @@ import {
   Layers,
   Check,
   X,
+  Plus,
 } from "lucide-react";
 import * as api from "./api";
 import {
@@ -36,6 +37,7 @@ import {
 import { Graph } from "./Graph";
 import { Timeline } from "./Timeline";
 import { Inspector } from "./Inspector";
+import { WorkPackageForm } from "./WorkPackageForm";
 const pages = [
   ["Overview", Activity, "Program health and evidence at a glance"],
   ["Capability map", Layers, "From product intent to engineering capabilities"],
@@ -87,6 +89,7 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState<"demo" | "diff" | null>(null);
   const [diff, setDiff] = useState("");
+  const [newWork, setNewWork] = useState(false);
   async function run(operation: () => Promise<Snapshot>, message = "") {
     setBusy(true);
     setError("");
@@ -94,8 +97,10 @@ export function App() {
       const s = await operation();
       setSnapshot(s);
       setNotice(message);
+      return s;
     } catch (e) {
       setError(String(e));
+      return null;
     } finally {
       setBusy(false);
     }
@@ -128,6 +133,7 @@ export function App() {
       setRecents(await api.recentProjects());
       setPicker(false);
       setSelected(null);
+      setNewWork(false);
       setSearch("");
       setKind("");
       setStatus("");
@@ -146,6 +152,7 @@ export function App() {
       }
       if (e.key === "Escape") {
         setModal(null);
+        setNewWork(false);
         setSelected(null);
       }
     };
@@ -885,6 +892,15 @@ export function App() {
             <p>{pages.find((p) => p[0] === page)?.[2]}</p>
           </div>
           <div className="heading-actions">
+            {page === "Work packages" && api.desktop && (
+              <button
+                className="primary"
+                disabled={!snapshot || busy}
+                onClick={() => setNewWork(true)}
+              >
+                <Plus size={15} /> New work package
+              </button>
+            )}
             {snapshot?.manifest.synthetic &&
               snapshot.manifest.project === "PackInspect" && (
                 <button
@@ -1097,6 +1113,32 @@ export function App() {
               () => api.saveEntity(entity, snapshot.revision),
               `Saved ${entity.id} to semantic files`,
             )
+          }
+          onDelete={(id) =>
+            void run(
+              () => api.deleteWorkPackage(id, snapshot.revision),
+              `Deleted ${id}; removed its saved layout and plan`,
+            ).then((next) => {
+              if (next) setSelected(null);
+            })
+          }
+        />
+      )}
+      {newWork && snapshot && (
+        <WorkPackageForm
+          snapshot={snapshot}
+          busy={busy}
+          onClose={() => setNewWork(false)}
+          onCreate={(entity) =>
+            void run(
+              () => api.createWorkPackage(entity, snapshot.revision),
+              `Created ${entity.id} in semantic files`,
+            ).then((next) => {
+              if (next) {
+                setNewWork(false);
+                setSelected(entity.id);
+              }
+            })
           }
         />
       )}

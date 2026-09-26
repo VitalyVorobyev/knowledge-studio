@@ -8,4 +8,6 @@ Source records set `location` to a project-relative Markdown path or HTTPS URL. 
 
 A view plan is a start offset and duration in weeks. Without `planning_origin`, the UI shows unknown calendar origin and unscheduled work. View changes do not alter semantic effort or milestone target dates. Writes compare a snapshot revision, validate the full model, then use deterministic single-file or journaled multi-file updates. The UI does not commit or push.
 
+The desktop Work packages view may create one work-package file after validating its outcome, acceptance criterion and cited source section. It may delete a package only after incoming references are removed; deletion also removes that ID from layouts and provisional plans. Keep IDs permanent across the project lifecycle: choose a new ID rather than reusing one removed in Git history. Git review includes staged, unstaged and untracked knowledge files.
+
 The explicit `studio -- migrate <root>` command creates a v2 tree from legacy v1 `knowledge/` and `views/`, preserves old files for review and converts legacy `details.file` sources into local paths. It refuses to overwrite an existing v2 tree. The app rejects v1 on load until migrated.

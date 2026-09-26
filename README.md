@@ -1,6 +1,6 @@
 # Knowledge Studio
 
-A local-first, Git-native project knowledge workbench. Agents edit small structured files; humans explore the resulting graph in 13 linked views and make targeted changes to status, ownership, relations, layout and provisional plans. Rust validates and writes the model. There is no account, cloud service, or UI database.
+A local-first, Git-native project knowledge workbench. Agents edit small structured files; humans explore the resulting graph in 13 linked views and make targeted changes to work packages, status, ownership, relations, layout and provisional plans. Rust validates and writes the model. There is no account, cloud service, or UI database.
 
 [PackInspect](examples/packinspect/) is a wholly synthetic example. A real product keeps `knowledge-studio/` **inside its own entry-point repository**. That repository links to other code repositories and authoritative resources rather than copying them.
 
@@ -28,7 +28,9 @@ bun run demo:apply            # synthetic PackInspect change
 bun run demo:reset
 ```
 
-The app does not commit changes. Review the selected repository's Git diff after any edit. To use Visual Anomaly Lab locally, choose `/Users/vitalyvorobyev/vision/visual-anomaly-lab` if that checkout has its `knowledge-studio/` integration.
+The app does not commit changes. Review the selected repository's Git diff after any edit. To use another project locally, choose a checkout containing its `knowledge-studio/` integration.
+
+On **Work packages**, use **New work package** to record a verifiable outcome and cite an existing source section. Optional owner, milestone, dependency and effort may stay unknown. The inspector edits the package text and metadata. Deletion requires a second action and is blocked until all incoming relations are removed; it also clears saved layout and provisional planning for that package. Newly created files appear in **Review diff** even before staging. UI writes never commit automatically.
 
 ## Repository layout
 

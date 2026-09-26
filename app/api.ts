@@ -74,6 +74,18 @@ export function saveEntity(
 ): Promise<Snapshot> {
   return invoke("save_entity", { entity, revision });
 }
+export function createWorkPackage(
+  entity: Entity,
+  revision: string,
+): Promise<Snapshot> {
+  return invoke("create_work_package", { entity, revision });
+}
+export function deleteWorkPackage(
+  id: string,
+  revision: string,
+): Promise<Snapshot> {
+  return invoke("delete_work_package", { id, revision });
+}
 export function saveViews(views: Views, revision: string): Promise<Snapshot> {
   return invoke("save_views", { views, revision });
 }

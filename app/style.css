@@ -1319,6 +1319,77 @@ td:first-child {
   color: #8b967c;
   background: #f3f6ec;
 }
+.delete-section {
+  padding-bottom: 24px;
+}
+.delete-section p {
+  margin: 10px 0;
+}
+.delete-actions {
+  display: flex;
+  gap: 8px;
+}
+.danger {
+  border-color: #dfc5bc;
+  color: #a04437;
+  background: #fff8f5;
+}
+.danger:hover {
+  background: #f9ece7;
+  border-color: #c98e80;
+}
+.wp-form {
+  width: 680px;
+}
+.wp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 20px 0;
+}
+.wp-form-grid .wide {
+  grid-column: 1 / -1;
+}
+.wp-form label {
+  display: block;
+  font-size: 10px;
+  color: #728376;
+}
+.wp-form input,
+.wp-form select,
+.wp-form textarea,
+.inspector textarea {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+}
+.inspector textarea {
+  resize: vertical;
+}
+.wp-form textarea {
+  resize: vertical;
+}
+.wp-form footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 15px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.form-hint {
+  color: #a04437;
+  margin: 6px 0;
+}
 .change-badge {
   background: #f6edcd;
   color: #a08c4d;

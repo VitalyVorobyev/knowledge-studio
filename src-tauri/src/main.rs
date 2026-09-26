@@ -77,6 +77,22 @@ fn save_entity(
     with_store(state, |s| s.save_entity(entity, &revision))
 }
 #[tauri::command]
+fn create_work_package(
+    state: tauri::State<AppState>,
+    entity: Entity,
+    revision: String,
+) -> Result<Snapshot, String> {
+    with_store(state, |s| s.create_work_package(entity, &revision))
+}
+#[tauri::command]
+fn delete_work_package(
+    state: tauri::State<AppState>,
+    id: String,
+    revision: String,
+) -> Result<Snapshot, String> {
+    with_store(state, |s| s.delete_work_package(&id, &revision))
+}
+#[tauri::command]
 fn save_views(
     state: tauri::State<AppState>,
     views: Views,
@@ -94,7 +110,7 @@ fn demo_change(
 }
 #[tauri::command]
 fn git_diff(state: tauri::State<AppState>) -> Result<String, String> {
-    with_store(state, |s| s.git(&["diff", "--", "knowledge-studio"]))
+    with_store(state, |s| s.knowledge_diff())
 }
 fn main() {
     tauri::Builder::default()
@@ -107,6 +123,8 @@ fn main() {
             example_project,
             load_workspace,
             save_entity,
+            create_work_package,
+            delete_work_package,
             save_views,
             demo_change,
             git_diff

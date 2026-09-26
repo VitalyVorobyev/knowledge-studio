@@ -441,6 +441,29 @@ impl Store {
         }
         Ok(String::from_utf8_lossy(&out.stdout).into())
     }
+    pub fn knowledge_diff(&self) -> Result<String> {
+        let mut diff = self.git(&["diff", "--", "knowledge-studio"])?;
+        diff.push_str(&self.git(&["diff", "--cached", "--", "knowledge-studio"])?);
+        let untracked = self.git(&[
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "--",
+            "knowledge-studio",
+        ])?;
+        for path in untracked.lines() {
+            if !path.starts_with("knowledge-studio/")
+                || Path::new(path)
+                    .components()
+                    .any(|part| !matches!(part, std::path::Component::Normal(_)))
+            {
+                continue;
+            }
+            let content = fs::read_to_string(self.root.join(path)).map_err(|e| e.to_string())?;
+            diff.push_str(&format!("\n--- /dev/null\n+++ b/{path}\n{content}"));
+        }
+        Ok(diff)
+    }
     fn check(&self, revision: &str) -> Result<Snapshot> {
         let s = self.load_unlocked()?;
         if s.revision != revision {
@@ -484,6 +507,98 @@ impl Store {
             format!("knowledge-studio/entities/{}.json", entity.id),
             json(&entity)?,
         )]))?;
+        self.load_unlocked()
+    }
+    pub fn create_work_package(&self, mut entity: Entity, revision: &str) -> Result<Snapshot> {
+        let _lock = self.lock()?;
+        let mut s = self.check(revision)?;
+        if entity.kind != "WorkPackage" {
+            return Err("This editor creates work packages only".into());
+        }
+        let path = self
+            .root
+            .join(format!("knowledge-studio/entities/{}.json", entity.id));
+        if path.exists() || s.entities.iter().any(|e| e.id == entity.id) {
+            return Err(format!("Entity {} already exists", entity.id));
+        }
+        let relative_path = format!("knowledge-studio/entities/{}.json", entity.id);
+        if self
+            .git(&["log", "--all", "--format=%H", "--", &relative_path])
+            .is_ok_and(|history| !history.trim().is_empty())
+        {
+            return Err(format!(
+                "ID {} exists in Git history; choose a new ID",
+                entity.id
+            ));
+        }
+        entity
+            .relations
+            .sort_by(|a, b| (&a.kind, &a.target).cmp(&(&b.kind, &b.target)));
+        s.entities.push(entity.clone());
+        validate(&s.manifest, &s.entities, &s.views)?;
+        let text = json(&entity)?;
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .map_err(|e| e.to_string())?;
+        if let Err(err) = std::io::Write::write_all(&mut file, text.as_bytes()) {
+            let _ = fs::remove_file(&path);
+            return Err(err.to_string());
+        }
+        self.load_unlocked()
+    }
+    pub fn delete_work_package(&self, id: &str, revision: &str) -> Result<Snapshot> {
+        let _lock = self.lock()?;
+        let mut s = self.check(revision)?;
+        if s.entities
+            .iter()
+            .find(|e| e.id == id)
+            .is_none_or(|e| e.kind != "WorkPackage")
+        {
+            return Err("Unknown work package".into());
+        }
+        let incoming: Vec<_> = s
+            .entities
+            .iter()
+            .filter(|e| {
+                e.id != id
+                    && (e.owner.as_deref() == Some(id)
+                        || e.milestone.as_deref() == Some(id)
+                        || e.relations.iter().any(|r| r.target == id)
+                        || e.evidence.iter().any(|ev| ev.source == id))
+            })
+            .map(|e| e.id.as_str())
+            .collect();
+        if !incoming.is_empty() {
+            return Err(format!(
+                "Remove incoming references first: {}",
+                incoming.join(", ")
+            ));
+        }
+        s.entities.retain(|e| e.id != id);
+        s.views.planning.remove(id);
+        for layout in s.views.layouts.values_mut() {
+            layout.remove(id);
+        }
+        validate(&s.manifest, &s.entities, &s.views)?;
+        let entity_path = format!("knowledge-studio/entities/{id}.json");
+        let view_path = "knowledge-studio/views/workspace.json";
+        let old = BTreeMap::from([
+            (
+                entity_path.clone(),
+                fs::read_to_string(self.root.join(&entity_path)).map_err(|e| e.to_string())?,
+            ),
+            (
+                view_path.into(),
+                fs::read_to_string(self.root.join(view_path)).map_err(|e| e.to_string())?,
+            ),
+        ]);
+        let journal = self.root.join(".knowledge-studio/transaction.json");
+        atomic(&journal, &json(&old)?)?;
+        atomic(&self.root.join(view_path), &json(&s.views)?)?;
+        fs::remove_file(self.root.join(entity_path)).map_err(|e| e.to_string())?;
+        fs::remove_file(journal).map_err(|e| e.to_string())?;
         self.load_unlocked()
     }
     pub fn save_views(&self, views: Views, revision: &str) -> Result<Snapshot> {
@@ -836,6 +951,157 @@ mod tests {
         a.confidence = 2.0;
         assert!(s.save_entity(a, &x.revision).is_err());
         assert_eq!(x.revision, s.load().unwrap().revision);
+    }
+    #[test]
+    fn create_and_delete_work_package_clean_view_state() {
+        let (_d, store) = fixture();
+        let original = store.load().unwrap();
+        let mut work = original
+            .entities
+            .iter()
+            .find(|e| e.id == "WP-001")
+            .unwrap()
+            .clone();
+        work.id = "WP-099".into();
+        work.title = "Verify a synthetic outcome".into();
+        let created = store.create_work_package(work, &original.revision).unwrap();
+        assert!(store
+            .root
+            .join("knowledge-studio/entities/WP-099.json")
+            .exists());
+        assert!(store
+            .create_work_package(
+                created
+                    .entities
+                    .iter()
+                    .find(|e| e.id == "WP-099")
+                    .unwrap()
+                    .clone(),
+                &created.revision
+            )
+            .is_err());
+        let mut views = created.views.clone();
+        views.planning.insert(
+            "WP-099".into(),
+            Plan {
+                start: 2,
+                duration: 3,
+            },
+        );
+        views
+            .layouts
+            .entry("dependencies".into())
+            .or_default()
+            .insert("WP-099".into(), Position { x: 5.0, y: 7.0 });
+        let planned = store.save_views(views, &created.revision).unwrap();
+        let deleted = store
+            .delete_work_package("WP-099", &planned.revision)
+            .unwrap();
+        assert!(!store
+            .root
+            .join("knowledge-studio/entities/WP-099.json")
+            .exists());
+        assert!(!deleted.views.planning.contains_key("WP-099"));
+        assert!(deleted
+            .views
+            .layouts
+            .values()
+            .all(|layout| !layout.contains_key("WP-099")));
+    }
+    #[test]
+    fn delete_requires_incoming_references_to_be_removed() {
+        let (_d, store) = fixture();
+        let original = store.load().unwrap();
+        let mut work = original
+            .entities
+            .iter()
+            .find(|e| e.id == "WP-001")
+            .unwrap()
+            .clone();
+        work.id = "WP-099".into();
+        work.relations.push(Relation {
+            kind: "depends_on".into(),
+            target: "WP-002".into(),
+        });
+        let created = store.create_work_package(work, &original.revision).unwrap();
+        let error = store
+            .delete_work_package("WP-002", &created.revision)
+            .unwrap_err();
+        assert!(error.contains("WP-099"));
+        assert!(store
+            .root
+            .join("knowledge-studio/entities/WP-002.json")
+            .exists());
+    }
+    #[test]
+    fn git_review_includes_new_untracked_entity() {
+        let (_d, store) = fixture();
+        assert!(Command::new("git")
+            .arg("init")
+            .arg(&store.root)
+            .status()
+            .unwrap()
+            .success());
+        let original = store.load().unwrap();
+        let mut work = original
+            .entities
+            .iter()
+            .find(|e| e.id == "WP-001")
+            .unwrap()
+            .clone();
+        work.id = "WP-099".into();
+        store.create_work_package(work, &original.revision).unwrap();
+        assert!(store
+            .knowledge_diff()
+            .unwrap()
+            .contains("+++ b/knowledge-studio/entities/WP-099.json"));
+    }
+    #[test]
+    fn committed_id_cannot_be_reused_after_deletion() {
+        let (_d, store) = fixture();
+        assert!(Command::new("git")
+            .arg("init")
+            .arg(&store.root)
+            .status()
+            .unwrap()
+            .success());
+        let original = store.load().unwrap();
+        let mut work = original
+            .entities
+            .iter()
+            .find(|e| e.id == "WP-001")
+            .unwrap()
+            .clone();
+        work.id = "WP-099".into();
+        let created = store
+            .create_work_package(work.clone(), &original.revision)
+            .unwrap();
+        assert!(store
+            .git(&["add", "knowledge-studio/entities/WP-099.json"])
+            .is_ok());
+        assert!(Command::new("git")
+            .arg("-C")
+            .arg(&store.root)
+            .args([
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "commit",
+                "-m",
+                "test entity"
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success());
+        let deleted = store
+            .delete_work_package("WP-099", &created.revision)
+            .unwrap();
+        assert!(store
+            .create_work_package(work, &deleted.revision)
+            .unwrap_err()
+            .contains("Git history"));
     }
     #[test]
     fn planning_write_does_not_modify_semantics() {

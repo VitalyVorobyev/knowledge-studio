@@ -10,6 +10,7 @@ import {
 import "@testing-library/jest-dom/vitest";
 import { Inspector } from "./Inspector";
 import { Timeline } from "./Timeline";
+import { WorkPackageForm } from "./WorkPackageForm";
 import { coverage, effortSum, type Entity, type Snapshot } from "./types";
 import fixture from "../examples/packinspect/knowledge-studio/entities/WP-001.json";
 import source from "../examples/packinspect/knowledge-studio/entities/SRC-001.json";
@@ -46,6 +47,7 @@ describe("Entity editing", () => {
         onClose={() => {}}
         onSelect={() => {}}
         onSave={save}
+        onDelete={() => {}}
         editable
         busy={false}
       />,
@@ -66,6 +68,7 @@ describe("Entity editing", () => {
         onClose={() => {}}
         onSelect={select}
         onSave={() => {}}
+        onDelete={() => {}}
         editable={false}
         busy={false}
       />,
@@ -83,6 +86,7 @@ describe("Entity editing", () => {
         onClose={() => {}}
         onSelect={() => {}}
         onSave={save}
+        onDelete={() => {}}
         editable
         busy={false}
       />,
@@ -97,6 +101,63 @@ describe("Entity editing", () => {
       type: "depends_on",
       target: "SRC-001",
     });
+  });
+  it("creates a sourced work package with unknown effort", () => {
+    const create = vi.fn();
+    render(
+      <WorkPackageForm
+        snapshot={snapshot}
+        busy={false}
+        onClose={() => {}}
+        onCreate={create}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Work package title"), {
+      target: { value: "Verify camera sync" },
+    });
+    fireEvent.change(screen.getByLabelText("Verifiable outcome"), {
+      target: { value: "Synchronized pairs" },
+    });
+    fireEvent.change(screen.getByLabelText("Validation criterion"), {
+      target: { value: "No missing pairs in 10,000" },
+    });
+    fireEvent.change(screen.getByLabelText("Evidence source"), {
+      target: { value: "SRC-001" },
+    });
+    fireEvent.change(screen.getByLabelText("Evidence section"), {
+      target: { value: "scope" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create work package" }),
+    );
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "WP-002",
+        effort: null,
+        evidence: [{ source: "SRC-001", section: "scope" }],
+      }),
+    );
+  });
+  it("requires a second action before deleting an unreferenced package", () => {
+    const remove = vi.fn();
+    render(
+      <Inspector
+        entity={entity}
+        snapshot={snapshot}
+        onClose={() => {}}
+        onSelect={() => {}}
+        onSave={() => {}}
+        onDelete={remove}
+        editable
+        busy={false}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Delete work package…" }),
+    );
+    expect(remove).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Delete WP-001" }));
+    expect(remove).toHaveBeenCalledWith("WP-001");
   });
 });
 describe("Provisional timeline", () => {
