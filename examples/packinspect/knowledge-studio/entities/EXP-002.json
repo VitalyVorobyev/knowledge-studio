@@ -1,0 +1,41 @@
+{
+  "id": "EXP-002",
+  "kind": "Experiment",
+  "title": "Latency / thermal envelope",
+  "summary": "Proposed experiment; no measured results are claimed.",
+  "status": "planned",
+  "confidence": 0.75,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-003",
+      "section": "latency"
+    }
+  ],
+  "relations": [
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    },
+    {
+      "type": "uses",
+      "target": "DATA-002"
+    },
+    {
+      "type": "validates",
+      "target": "REQ-001"
+    }
+  ],
+  "details": {
+    "hypothesis": "80 parts/min fits reject latency budget",
+    "result": "Not run; synthetic planning fixture"
+  },
+  "repo_url": null,
+  "location": null
+}

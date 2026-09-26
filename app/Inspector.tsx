@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { X, ArrowUpRight, Save, Plus, Trash2 } from "lucide-react";
 import {
   type Entity,
@@ -113,19 +114,27 @@ export function Inspector({
             <div className="criterion">{entity.validation_criterion}</div>
             <dl>
               <dt>Effort range</dt>
-              <dd>{entity.effort?.join("–")} person-weeks</dd>
+              <dd>
+                {entity.effort
+                  ? `${entity.effort.join("–")} person-weeks`
+                  : "Unknown"}
+              </dd>
               <dt>Work type</dt>
-              <dd>{entity.work_type}</dd>
+              <dd>{entity.work_type ?? "Unknown"}</dd>
               <dt>Skill area</dt>
-              <dd>{entity.skill}</dd>
+              <dd>{entity.skill ?? "Unknown"}</dd>
               <dt>Milestone</dt>
               <dd>
-                <button
-                  className="text-button"
-                  onClick={() => onSelect(entity.milestone!)}
-                >
-                  {lookup(entity.milestone!)?.title}
-                </button>
+                {entity.milestone ? (
+                  <button
+                    className="text-button"
+                    onClick={() => onSelect(entity.milestone!)}
+                  >
+                    {lookup(entity.milestone)?.title}
+                  </button>
+                ) : (
+                  "Unknown"
+                )}
               </dd>
             </dl>
           </>
@@ -133,12 +142,39 @@ export function Inspector({
         {entity.kind === "Source" && (
           <>
             <div className="section-label">
-              Source document · {entity.details.file}
+              Source ·{" "}
+              {entity.location?.type === "local"
+                ? entity.location.path
+                : entity.location?.type === "external"
+                  ? entity.location.url
+                  : "unknown"}
             </div>
+            {entity.location?.type === "external" && (
+              <button
+                onClick={() =>
+                  void openUrl(
+                    entity.location?.type === "external"
+                      ? entity.location.url
+                      : "",
+                  )
+                }
+              >
+                Open external source <ArrowUpRight size={14} />
+              </button>
+            )}
             <pre className="source-document">
-              {snapshot.documents[entity.id]}
+              {snapshot.documents[entity.id] ??
+                "External source: follow the URL above for the authoritative record."}
             </pre>
           </>
+        )}
+        {entity.repo_url && (
+          <button
+            className="evidence"
+            onClick={() => void openUrl(entity.repo_url!)}
+          >
+            Open repository <ArrowUpRight size={14} />
+          </button>
         )}
         {entity.kind !== "Source" && Object.keys(entity.details).length > 0 && (
           <>

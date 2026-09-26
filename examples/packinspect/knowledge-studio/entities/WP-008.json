@@ -1,0 +1,61 @@
+{
+  "id": "WP-008",
+  "kind": "WorkPackage",
+  "title": "Deliver reproducible recipe bundles",
+  "summary": "A verifiable engineering outcome with explicit uncertainty.",
+  "status": "planned",
+  "confidence": 0.8,
+  "owner": "OWN-002",
+  "effort": [
+    2.0,
+    4.0
+  ],
+  "outcome": "Signed versioned recipes with rollback",
+  "work_type": "known",
+  "validation_criterion": "Tampered bundle rejected; rollback verified",
+  "skill": "Rust / acquisition / PLC",
+  "milestone": "MS-002",
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "WP-005"
+    },
+    {
+      "type": "implemented_in",
+      "target": "REP-002"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-006"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-009"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-010"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-012"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {},
+  "repo_url": null,
+  "location": null
+}

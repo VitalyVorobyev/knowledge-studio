@@ -1,0 +1,41 @@
+{
+  "id": "VAL-003",
+  "kind": "Validation",
+  "title": "PLC loop test",
+  "summary": "Protocol and planned evidence for the release dossier.",
+  "status": "passed",
+  "confidence": 0.75,
+  "owner": "OWN-004",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    }
+  ],
+  "relations": [
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    },
+    {
+      "type": "uses",
+      "target": "DATA-003"
+    },
+    {
+      "type": "validates",
+      "target": "REQ-005"
+    }
+  ],
+  "details": {
+    "method": "Versioned protocol, reproducible input and reviewer sign-off",
+    "result": "Synthetic simulator fixture passed; not hardware acceptance"
+  },
+  "repo_url": null,
+  "location": null
+}

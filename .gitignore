@@ -3,5 +3,5 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 .DS_Store
-.packinspect/
+.knowledge-studio/
 *.tsbuildinfo

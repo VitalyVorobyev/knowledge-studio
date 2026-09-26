@@ -11,16 +11,21 @@ import "@testing-library/jest-dom/vitest";
 import { Inspector } from "./Inspector";
 import { Timeline } from "./Timeline";
 import { coverage, effortSum, type Entity, type Snapshot } from "./types";
-import fixture from "../knowledge/entities/WP-001.json";
-import source from "../knowledge/entities/SRC-001.json";
-import owner from "../knowledge/entities/OWN-002.json";
+import fixture from "../examples/packinspect/knowledge-studio/entities/WP-001.json";
+import source from "../examples/packinspect/knowledge-studio/entities/SRC-001.json";
+import owner from "../examples/packinspect/knowledge-studio/entities/OWN-002.json";
 const entity = fixture as Entity;
 const snapshot: Snapshot = {
-  manifest: { schema_version: 1, project: "PackInspect", synthetic: true },
+  manifest: {
+    schema_version: 2,
+    project: "PackInspect",
+    synthetic: true,
+    planning_origin: "2026-10-05",
+  },
   entities: [entity, source as Entity, owner as Entity],
   documents: { "SRC-001": "# Synthetic source\n## scope\nTest evidence" },
   views: {
-    schema_version: 1,
+    schema_version: 2,
     layouts: {},
     planning: { "WP-001": { start: 0, duration: 4 } },
   },
@@ -105,6 +110,7 @@ describe("Provisional timeline", () => {
         onSelect={() => {}}
         onPlan={plan}
         editable
+        origin="2026-10-05"
       />,
     );
     const slider = screen.getByRole("slider");

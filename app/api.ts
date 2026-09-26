@@ -1,27 +1,49 @@
 /// <reference types="vite/client" />
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { Entity, Snapshot, Views } from "./types";
 export const desktop = isTauri();
+export async function recentProjects(): Promise<string[]> {
+  return desktop ? invoke("recent_projects") : [];
+}
+export async function chooseProject(): Promise<string | null> {
+  return desktop
+    ? ((await open({ directory: true, multiple: false })) as string | null)
+    : null;
+}
+export async function exampleProject(): Promise<string> {
+  return desktop ? invoke("example_project") : "";
+}
+export async function openProject(path: string): Promise<Snapshot> {
+  return desktop ? invoke("open_project", { path }) : load();
+}
 export async function load(): Promise<Snapshot> {
   if (desktop) return invoke("load_workspace");
-  const modules = import.meta.glob("../knowledge/entities/*.json", {
-    eager: true,
-    import: "default",
-  });
-  const manifest = (await import("../knowledge/manifest.json")).default;
-  const views = (await import("../views/workspace.json")).default as Views;
+  const modules = import.meta.glob(
+    "../examples/packinspect/knowledge-studio/entities/*.json",
+    { eager: true, import: "default" },
+  );
+  const manifest = (
+    await import("../examples/packinspect/knowledge-studio/manifest.json")
+  ).default;
+  const views = (
+    await import("../examples/packinspect/knowledge-studio/views/workspace.json")
+  ).default as Views;
   const entities = Object.values(modules) as Entity[];
-  const sourceModules = import.meta.glob("../sources/*.md", {
-    eager: true,
-    query: "?raw",
-    import: "default",
-  });
+  const sourceModules = import.meta.glob(
+    "../examples/packinspect/sources/*.md",
+    { eager: true, query: "?raw", import: "default" },
+  );
   const documents = Object.fromEntries(
     entities
-      .filter((e) => e.kind === "Source")
+      .filter((e) => e.kind === "Source" && e.location?.type === "local")
       .map((e) => [
         e.id,
-        String(sourceModules[`../sources/${e.details.file}`]),
+        String(
+          sourceModules[
+            `../examples/packinspect/${e.location && "path" in e.location ? e.location.path : ""}`
+          ],
+        ),
       ]),
   );
   const backlinks: Snapshot["backlinks"] = {};
@@ -41,9 +63,9 @@ export async function load(): Promise<Snapshot> {
     views,
     backlinks,
     revision: "preview",
-    root: "Read-only browser preview · open desktop app to edit files",
+    root: "PackInspect browser preview",
     git: "",
-    demo_applied: entities.some((e) => e.details.change_request === "CR-01"),
+    demo_applied: false,
   };
 }
 export function saveEntity(

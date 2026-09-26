@@ -19,10 +19,10 @@ The bundled deterministic proposal implements that reasoning in `demo_update` in
 | WP-006 | Eight-hour soak at 120/min with four cameras; effort 3–6 → 5–9 pw |
 | MS-002, MS-003 | Targets move three weeks; marked proposed |
 
-Run `npm run demo:apply`, then inspect `git diff -- knowledge`. Reload the app to see changes from the CLI. An agent can instead edit the same JSON files directly; the CLI exists to make the showcase repeatable.
+Run `bun run demo:apply`, then inspect `git diff -- examples/packinspect/knowledge-studio`. Reload the app to see changes from the CLI. An agent can instead edit the same JSON files directly; the CLI exists to make the showcase repeatable.
 
 Expected consequences: total modeled effort rises from 30–58 to 35–65 person-weeks; three affected packages rise from 7–15 to 12–22. No validation becomes passed. Saved timeline bars do not move automatically. The engineer must reconcile planning against proposed milestone dates.
 
-Run `npm run demo:reset` after the demonstration. It restores only the scenario's 11 files, preserves unrelated work, and refuses to overwrite later edits to affected files. If that happens, review and preserve those edits before restoring the stored post-demo version or resolving manually through Git.
+Run `bun run demo:reset` after the demonstration. It restores only the scenario's 11 files, preserves unrelated work, and refuses to overwrite later edits to affected files. If that happens, review and preserve those edits before restoring the stored post-demo version or resolving manually through Git.
 
 This is a demonstration of a reviewable file contract and impact reasoning. It is not a claim that the software contains an autonomous reasoning engine.

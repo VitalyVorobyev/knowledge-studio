@@ -6,6 +6,7 @@ export function Timeline({
   onSelect,
   onPlan,
   editable,
+  origin,
 }: {
   entities: Entity[];
   all: Entity[];
@@ -13,6 +14,7 @@ export function Timeline({
   onSelect: (id: string) => void;
   onPlan: (id: string, start: number, duration: number) => void;
   editable: boolean;
+  origin: string | null;
 }) {
   function drag(
     event: React.PointerEvent<HTMLDivElement>,
@@ -70,9 +72,11 @@ export function Timeline({
   return (
     <>
       <div className="notice">
-        Provisional plan · week 1 starts 5 Oct 2026. Drag bars to move; drag the
-        right edge to resize. Keyboard: ← / → move; Shift + arrow resizes. These
-        edits change views/workspace.json only.
+        Provisional plan ·{" "}
+        {origin ? `week 1 starts ${origin}` : "origin date unknown"}. Drag bars
+        to move; drag the right edge to resize. Keyboard: ← / → move; Shift +
+        arrow resizes. These edits change knowledge-studio/views/workspace.json
+        only.
       </div>
       <div className="timeline">
         <div className="time-head">
@@ -84,7 +88,32 @@ export function Timeline({
           </div>
         </div>
         {wp.map((e) => {
-          const p = views.planning[e.id] ?? { start: 0, duration: 4 };
+          const p = views.planning[e.id];
+          if (!p)
+            return (
+              <div className="time-row" key={e.id}>
+                <button className="time-label" onClick={() => onSelect(e.id)}>
+                  <code>{e.id}</code>
+                  <span>{e.title}</span>
+                </button>
+                <div
+                  className="time-track"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    paddingLeft: 14,
+                  }}
+                >
+                  Unscheduled{" "}
+                  {editable && (
+                    <button onClick={() => onPlan(e.id, 0, 4)}>
+                      Add provisional bar
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
           const warnings = e.relations.filter(
             (r) =>
               r.type === "depends_on" &&
@@ -148,7 +177,7 @@ export function Timeline({
                   }}
                 >
                   <span>
-                    {p.duration}w · {e.owner}
+                    {p.duration}w · {e.owner ?? "owner unknown"}
                   </span>
                   <div
                     className="resize"
@@ -170,7 +199,7 @@ export function Timeline({
                 {e.id} · {e.status}
               </small>
               <strong>◇ {e.title}</strong>
-              <span>{e.details.target_date}</span>
+              <span>{e.details.target_date ?? "date unknown"}</span>
             </button>
           ))}
       </div>

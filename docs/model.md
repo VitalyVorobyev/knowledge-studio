@@ -1,52 +1,11 @@
-# Model and persistence contract
+# Model contract · schema v2
 
-The model has three separate layers. Semantic knowledge is versioned under `knowledge/`; saved projections are versioned under `views/`; local runtime state lives in memory and ignored `.packinspect/`. There is no UI database.
+The product repository stores semantics in `knowledge-studio/manifest.json` and `knowledge-studio/entities/<ID>.json`, and presentation/planning state in `knowledge-studio/views/workspace.json`. Operational files are ignored under `.knowledge-studio/` and recent paths under Tauri app data. JSON is pretty-printed with stable field ordering and a trailing newline; entities have stable typed IDs and one file each. The manifest declares `schema_version: 2`, product name, whether the workspace is synthetic, and an optional planning origin date.
 
-## Semantic entities
+Entity kinds: Product, Capability, Requirement, Component, Repository, Interface, WorkPackage, Decision, Risk, Experiment, Dataset, Validation, Milestone, Team and Source. Typed links: `implements`, `depends_on`, `blocks`, `validates`, `derived_from`, `supersedes`, `owned_by`, `implemented_in`, `uses`, `motivated_by`. Rust rejects duplicate/invalid IDs, unknown fields, broken targets, dependency cycles, invalid owner links, malformed effort ranges, source paths escaping the checkout and missing local `## section` anchors. Backlinks are derived in memory.
 
-`knowledge/manifest.json` declares `schema_version: 1`, the project name and `synthetic: true`. Each entity lives at `knowledge/entities/<ID>.json`. Rust rejects duplicate IDs, mismatched filenames, unknown fields, unknown kinds/statuses/relations and unsupported schema versions.
+Source records set `location` to a project-relative Markdown path or HTTPS URL. Evidence references a Source ID and named section. Local sources are read from the selected checkout; external URLs are linked, never fetched by the app. Repository records may set an HTTPS `repo_url` for another codebase. An unknown owner, effort or milestone is `null`, never manufactured. Work packages require an outcome, validation criterion and source justification; type and person-week range can remain unknown.
 
-IDs use a type-specific prefix and three digits: PRD, CAP, REQ, CMP, REP, INT, WP, DEC, RSK, EXP, DATA, VAL, MS, OWN, SRC. Team is the owner entity kind. Requirement assumptions use `status: assumption`, preserving their distinction from accepted requirements.
+A view plan is a start offset and duration in weeks. Without `planning_origin`, the UI shows unknown calendar origin and unscheduled work. View changes do not alter semantic effort or milestone target dates. Writes compare a snapshot revision, validate the full model, then use deterministic single-file or journaled multi-file updates. The UI does not commit or push.
 
-Every entity has `id`, `kind`, `title`, `summary`, `status`, `confidence` (0–1), nullable `owner`, `effort`, `outcome`, `work_type`, `validation_criterion`, `skill`, `milestone`, plus `evidence`, `relations`, and string-valued `details`. Keep fields in the order emitted by the Rust serializer, two-space indentation, final newline. Relations are sorted by type and target when saved; property maps have sorted keys. One entity per file keeps diffs small.
-
-WorkPackage requires an owner, effort range `[low, high]` in person-weeks, outcome, type (`known`, `integration`, `research`), validation criterion, skill area, milestone and source justification. Use measurable engineering outcomes rather than component names.
-
-`owner` is the editable convenience field; it must agree with exactly one `owned_by` relation when assigned. The inspector keeps these synchronized. `milestone` must reference a Milestone entity. Milestone `depends_on` edges identify gate outcomes.
-
-## Relations
-
-All targets must exist; self-links and duplicate type/target pairs are rejected.
-
-| Relation | Direction / constraint |
-| --- | --- |
-| implements | Implementing entity → requirement, capability or architecture intent |
-| depends_on | Dependent → prerequisite; cycles rejected |
-| blocks | Risk or blocking entity → affected entity |
-| validates | Protocol/experiment → Requirement, Capability or Component |
-| derived_from | New knowledge → earlier source knowledge |
-| supersedes | Replacement → previous entity |
-| owned_by | Entity → Team; must agree with owner |
-| implemented_in | Entity → Repository |
-| uses | Consumer → used entity |
-| motivated_by | Entity → Source |
-
-Only the explicit target constraints above are enforced in v1; `implements`, `depends_on`, `blocks`, `uses`, `derived_from` and `supersedes` permit any existing type to allow mixed engineering graphs. Backlinks are derived in Rust and never stored. Evidence citations also appear as incoming source links.
-
-## Evidence
-
-Evidence is `{ "source": "SRC-001", "section": "slide-08" }`. Source entities identify a local Markdown basename in `details.file` and expose section excerpts in `details`. Rust checks the source entity, registered section and actual Markdown `## section` heading. The source browser renders the authored document, not an arbitrary filesystem path. Excerpts are summaries for quick inspection; when changing a source, update any corresponding excerpts and citations as part of the same agent review.
-
-## Views
-
-`views/workspace.json` carries `schema_version`, `layouts` keyed by view and stable entity ID, and `planning` keyed by WorkPackage ID. A plan contains zero-based `start` and positive `duration` in elapsed weeks from 2026-10-05. The Rust format supports up to 52 weeks; this showcase UI displays 28. View edits do not alter effort, requirements, owners or milestone target dates.
-
-Dependency warnings compare provisional predecessor finish against dependent start. They are advisory. Moving a bar does not assert approval or propagate dates.
-
-## Writes and concurrency
-
-Tauri exposes five commands: load workspace, save entity, save views, apply/reset demo, read Git diff. The frontend has no general filesystem or shell API. Rust re-reads and validates the model under a workspace lock before writes, compares a snapshot revision (including source text), validates the proposed state and uses sibling-file rename for deterministic writes. A write-ahead rollback journal recovers interrupted batches on the next load. The demo stores before/after text for its affected files, and refuses reset if any were edited afterward.
-
-Locks and the rollback journal are operational state. The demo backup is operational state too; do not delete it while the demo is applied. Git remains the durable history and review mechanism. No commit, push or remote operation occurs through the UI.
-
-The compiled app defaults to the build checkout, with a `PACKINSPECT_ROOT` override. This intentional local-workspace binding avoids silently editing an unrelated current directory.
+The explicit `studio -- migrate <root>` command creates a v2 tree from legacy v1 `knowledge/` and `views/`, preserves old files for review and converts legacy `details.file` sources into local paths. It refuses to overwrite an existing v2 tree. The app rejects v1 on load until migrated.

@@ -69,10 +69,12 @@ const pages = [
     FlaskConical,
     "Record rationale, investigate uncertainty",
   ],
-  ["Sources", FileText, "Synthetic evidence with stable section references"],
+  ["Sources", FileText, "Tracked sources and stable section references"],
 ] as const;
 export function App() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [recents, setRecents] = useState<string[]>([]);
+  const [picker, setPicker] = useState(true);
   const [page, setPage] = useState("Overview");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -99,8 +101,43 @@ export function App() {
     }
   }
   useEffect(() => {
-    void run(api.load);
+    if (!api.desktop) {
+      void run(api.load);
+      setPicker(false);
+      return;
+    }
+    void api.recentProjects().then(async (paths) => {
+      setRecents(paths);
+      if (paths[0]) {
+        try {
+          const s = await api.openProject(paths[0]);
+          setSnapshot(s);
+          setPicker(false);
+        } catch (e) {
+          setError(String(e));
+        }
+      }
+    });
   }, []);
+  async function openProject(path: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const next = await api.openProject(path);
+      setSnapshot(next);
+      setRecents(await api.recentProjects());
+      setPicker(false);
+      setSelected(null);
+      setSearch("");
+      setKind("");
+      setStatus("");
+      setPage("Overview");
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -135,7 +172,7 @@ export function App() {
     if (!snapshot || busy) return;
     void run(
       () => api.saveViews(views, snapshot.revision),
-      "View state saved to views/workspace.json",
+      "View state saved to knowledge-studio/views/workspace.json",
     );
   }
   const select = (id: string) => setSelected(id);
@@ -182,7 +219,9 @@ export function App() {
                 <td>{statusTag(e.status)}</td>
                 <td>
                   {extra === "effort"
-                    ? `${e.effort?.join("–")} pw`
+                    ? e.effort
+                      ? `${e.effort.join("–")} pw`
+                      : "Unknown"
                     : (lookup(e.owner ?? "")?.title ?? "—")}
                 </td>
                 <td>
@@ -327,37 +366,50 @@ export function App() {
     switch (page) {
       case "Overview": {
         const c = coverage(entities);
-        const effort = effortSum(work);
+        const knownWork = work.filter((e) => e.effort);
+        const effort = effortSum(knownWork);
         return (
           <>
             <div className="overview-intro">
               <div>
-                <span className="eyebrow">PACKINSPECT / SYSTEM MODEL 01</span>
+                <span className="eyebrow">
+                  {snapshot.manifest.project.toUpperCase()} / SYSTEM MODEL
+                </span>
                 <h2>
                   Engineering intent,
                   <br />
                   <em>connected to evidence.</em>
                 </h2>
                 <p>
-                  A synthetic food-tray seal inspection program.
+                  {snapshot.manifest.synthetic
+                    ? "Synthetic example workspace."
+                    : "Project knowledge from tracked sources."}
                   <br />
                   Explore the same knowledge through thirteen perspectives.
                 </p>
               </div>
               <div className="system-sketch">
                 <div>
-                  CAMERAS{" "}
-                  <b>{lookup("CMP-001")?.details.camera_count ?? 2} ×</b>
+                  CAPABILITIES{" "}
+                  <b>
+                    {entities.filter((e) => e.kind === "Capability").length}
+                  </b>
                 </div>
                 <ArrowRight />
                 <div>
-                  EDGE PC <b>CV runtime</b>
+                  REQUIREMENTS{" "}
+                  <b>
+                    {entities.filter((e) => e.kind === "Requirement").length}
+                  </b>
                 </div>
                 <ArrowRight />
                 <div>
-                  PLC <b>Reject loop</b>
+                  VALIDATIONS{" "}
+                  <b>
+                    {entities.filter((e) => e.kind === "Validation").length}
+                  </b>
                 </div>
-                <span>OFFLINE · TRACEABLE · GIT-NATIVE</span>
+                <span>LOCAL · TRACEABLE · GIT-NATIVE</span>
               </div>
             </div>
             <div className="metrics">
@@ -377,10 +429,12 @@ export function App() {
               <button onClick={() => setPage("Resources")}>
                 <small>Engineering effort</small>
                 <strong>
-                  {effort.join("–")}
-                  <em> pw</em>
+                  {knownWork.length ? effort.join("–") : "Unknown"}
+                  {knownWork.length > 0 && <em> pw</em>}
                 </strong>
-                <span>Range, not a delivery commitment</span>
+                <span>
+                  {knownWork.length} of {work.length} packages estimated
+                </span>
               </button>
               <button onClick={() => setPage("Risks")}>
                 <small>Open risks</small>
@@ -415,7 +469,7 @@ export function App() {
                         <strong>{e.title}</strong>
                         <p>{e.details.gate}</p>
                       </div>
-                      <time>{e.details.target_date}</time>
+                      <time>{e.details.target_date ?? "Date unknown"}</time>
                     </button>
                   ))}
               </section>
@@ -424,40 +478,52 @@ export function App() {
                   <h3>Open questions</h3>
                   <span className="muted">Evidence before certainty</span>
                 </div>
-                {["DEC-001", "DEC-002", "RSK-002"].map((id) => {
-                  const e = lookup(id)!;
-                  return (
+                {entities
+                  .filter(
+                    (e) =>
+                      ["Decision", "Risk", "Experiment"].includes(e.kind) &&
+                      ["open", "proposed", "assumption"].includes(e.status),
+                  )
+                  .slice(0, 3)
+                  .map((e) => (
                     <button
                       className="question"
-                      key={id}
-                      onClick={() => select(id)}
+                      key={e.id}
+                      onClick={() => select(e.id)}
                     >
                       {typeTag(e)}
                       <strong>{e.title}</strong>
                       <ArrowRight size={14} />
                     </button>
-                  );
-                })}
-                <div className="scenario-strip">
-                  <div>
-                    <code>CR-01 · SYNTHETIC PM CHANGE</code>
-                    <p>
-                      Four cameras. 120 parts/min.
-                      <br />
-                      What changes downstream?
-                    </p>
-                  </div>
-                  <button className="primary" onClick={() => setModal("demo")}>
-                    Review impact <ArrowRight size={14} />
-                  </button>
-                </div>
+                  ))}
+                {snapshot.manifest.synthetic &&
+                  snapshot.manifest.project === "PackInspect" && (
+                    <div className="scenario-strip">
+                      <div>
+                        <code>CR-01 · SYNTHETIC PM CHANGE</code>
+                        <p>
+                          Four cameras. 120 parts/min.
+                          <br />
+                          What changes downstream?
+                        </p>
+                      </div>
+                      <button
+                        className="primary"
+                        onClick={() => setModal("demo")}
+                      >
+                        Review impact <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
               </section>
             </div>
             <div className="provenance-line">
               <GitBranch size={16} />
               <span>Semantic model → saved projections → local runtime</span>
               <span>
-                All content is fictional. No cloud, accounts or company data.
+                {snapshot.manifest.synthetic
+                  ? "All content in this example is fictional."
+                  : "Evidence linked to project sources."}
               </span>
             </div>
           </>
@@ -502,6 +568,7 @@ export function App() {
             views={snapshot.views}
             onSelect={select}
             editable={api.desktop && !busy}
+            origin={snapshot.manifest.planning_origin}
             onPlan={(id, start, duration) =>
               saveViews({
                 ...snapshot.views,
@@ -518,8 +585,7 @@ export function App() {
           <>
             <div className="notice">
               Demand across all planned work, including completed outcomes.
-              Capacity is a synthetic team assumption; elapsed delivery dates
-              require explicit sequencing.
+              Unknown owners, estimates and capacity remain unknown.
             </div>
             <div className="resource-list">
               {snapshot.entities
@@ -527,6 +593,7 @@ export function App() {
                 .map((owner) => {
                   const tasks = work.filter((e) => e.owner === owner.id);
                   const effort = effortSum(tasks);
+                  const knownWork = tasks.filter((e) => e.effort);
                   return (
                     <section className="panel resource" key={owner.id}>
                       <header>
@@ -534,18 +601,21 @@ export function App() {
                           <code>{owner.id}</code>
                           <h3>{owner.title}</h3>
                           <p>
-                            {owner.details.skill} · {owner.details.capacity}{" "}
-                            people assumed
+                            {owner.details.skill ?? "Skill unknown"} ·{" "}
+                            {owner.details.capacity
+                              ? `${owner.details.capacity} people assumed`
+                              : "Capacity unknown"}
                           </p>
                         </div>
                         <strong>
-                          {effort.join("–")} <small>person-weeks</small>
+                          {knownWork.length ? effort.join("–") : "Unknown"}{" "}
+                          <small>person-weeks</small>
                         </strong>
                       </header>
                       <div className="effort-bar">
                         {tasks.map((e) => (
                           <button
-                            title={`${e.id}: ${e.effort?.join("–")} pw`}
+                            title={`${e.id}: ${e.effort ? `${e.effort.join("–")} pw` : "estimate unknown"}`}
                             key={e.id}
                             style={{
                               flex: e.effort?.[1] ?? 1,
@@ -560,10 +630,8 @@ export function App() {
                       <footer>
                         {tasks.length} outcomes ·{" "}
                         {tasks.filter((e) => e.work_type === "research").length}{" "}
-                        research tasks · approximate idealized demand{" "}
-                        {Math.ceil(effort[0] / Number(owner.details.capacity))}–
-                        {Math.ceil(effort[1] / Number(owner.details.capacity))}{" "}
-                        team-weeks
+                        research · {tasks.filter((e) => !e.effort).length}{" "}
+                        unestimated
                       </footer>
                     </section>
                   );
@@ -591,16 +659,24 @@ export function App() {
                     <header>
                       <code>{e.id}</code>
                       <span className="risk-score">
-                        {Number(e.details.likelihood) *
-                          Number(e.details.impact)}{" "}
-                        / 25
+                        {e.details.likelihood && e.details.impact
+                          ? `${Number(e.details.likelihood) * Number(e.details.impact)} / 25`
+                          : "Unknown"}
                       </span>
                     </header>
                     <h3>{e.title}</h3>
                     <p>{e.summary}</p>
                     <div className="risk-dimensions">
-                      <span>Likelihood {e.details.likelihood}/5</span>
-                      <span>Impact {e.details.impact}/5</span>
+                      <span>
+                        Likelihood{" "}
+                        {e.details.likelihood
+                          ? `${e.details.likelihood}/5`
+                          : "unknown"}
+                      </span>
+                      <span>
+                        Impact{" "}
+                        {e.details.impact ? `${e.details.impact}/5` : "unknown"}
+                      </span>
                     </div>
                     <footer>
                       <small>MITIGATION</small>
@@ -621,9 +697,9 @@ export function App() {
         return (
           <>
             <div className="notice">
-              <span className="matrix-cell passed">✓</span> Passed synthetic
-              protocol <span className="matrix-cell planned">○</span> Planned
-              protocol · A link alone does not mean a requirement is verified.
+              <span className="matrix-cell passed">✓</span> Passed protocol{" "}
+              <span className="matrix-cell planned">○</span> Planned protocol ·
+              A link alone does not mean a requirement is verified.
             </div>
             <div className="table-wrap">
               <table className="matrix">
@@ -702,12 +778,12 @@ export function App() {
         return (
           <>
             <div className="notice">
-              Six authored synthetic documents. Select a source to read its
-              sections and see every entity that cites it.
+              Select a source to read its sections and see every entity that
+              cites it.
             </div>
             {cards(entities.filter((e) => e.kind === "Source"))}
             <div className="section-label spaced">
-              Dataset catalog · synthetic metadata only
+              Datasets · metadata and references only
             </div>
             {cards(entities.filter((e) => e.kind === "Dataset"))}
           </>
@@ -724,12 +800,16 @@ export function App() {
             <Box size={23} />
           </span>
           <div>
-            <strong>PackInspect</strong>
+            <strong>{snapshot?.manifest.project ?? "Knowledge Studio"}</strong>
             <small>KNOWLEDGE STUDIO</small>
           </div>
         </div>
         <div className="workspace-label">
-          <i /> Synthetic program <span>v1</span>
+          <i />{" "}
+          {snapshot?.manifest.synthetic
+            ? "Synthetic example"
+            : "Project workspace"}{" "}
+          <span>v2</span>
         </div>
         <nav>
           {pages.map(([name, Icon], i) => (
@@ -760,7 +840,8 @@ export function App() {
       <div className="workspace">
         <header className="topbar">
           <div className="breadcrumb">
-            PackInspect <span>/</span> {page}
+            {snapshot?.manifest.project ?? "Select project"} <span>/</span>{" "}
+            {page}
           </div>
           <div className="search">
             <Search size={15} />
@@ -783,6 +864,9 @@ export function App() {
           >
             <RefreshCw size={16} className={busy ? "spin" : ""} />
           </button>
+          {api.desktop && (
+            <button onClick={() => setPicker(true)}>Switch project</button>
+          )}
           <span className="local-badge">
             <i />
             {api.desktop ? "LOCAL" : "PREVIEW"}
@@ -801,13 +885,16 @@ export function App() {
             <p>{pages.find((p) => p[0] === page)?.[2]}</p>
           </div>
           <div className="heading-actions">
-            <button
-              disabled={!snapshot || busy}
-              onClick={() => setModal("demo")}
-            >
-              <GitCompareArrows size={16} />
-              PM change demo
-            </button>
+            {snapshot?.manifest.synthetic &&
+              snapshot.manifest.project === "PackInspect" && (
+                <button
+                  disabled={!snapshot || busy}
+                  onClick={() => setModal("demo")}
+                >
+                  <GitCompareArrows size={16} />
+                  PM change demo
+                </button>
+              )}
             <button
               disabled={!api.desktop || busy}
               onClick={async () => {
@@ -854,14 +941,16 @@ export function App() {
               <option key={s}>{s}</option>
             ))}
           </select>
-          <label>
-            <input
-              type="checkbox"
-              checked={changedOnly}
-              onChange={(e) => setChangedOnly(e.target.checked)}
-            />
-            CR-01 changes
-          </label>
+          {snapshot?.manifest.synthetic && (
+            <label>
+              <input
+                type="checkbox"
+                checked={changedOnly}
+                onChange={(e) => setChangedOnly(e.target.checked)}
+              />
+              CR-01 changes
+            </label>
+          )}
           {(search || kind || status || changedOnly) && (
             <button
               className="text-button"
@@ -929,14 +1018,71 @@ export function App() {
               ? "Working…"
               : snapshot
                 ? api.desktop
-                  ? "Model validated · schema v1"
-                  : "Static synthetic fixture · schema v1"
+                  ? "Model validated · schema v2"
+                  : "Static synthetic fixture · schema v2"
                 : "Waiting for workspace"}
           </span>
           <span title={snapshot?.root}>{snapshot?.root}</span>
           <code>{snapshot?.revision.slice(0, 8)}</code>
         </footer>
       </div>
+      {picker && api.desktop && (
+        <div className="modal-backdrop">
+          <section
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choose project"
+          >
+            <header>
+              <div>
+                <code>KNOWLEDGE STUDIO</code>
+                <h2>Open a project</h2>
+              </div>
+              {snapshot && (
+                <button
+                  onClick={() => setPicker(false)}
+                  aria-label="Close project picker"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </header>
+            <p>
+              Choose a Git checkout containing knowledge-studio/manifest.json.
+            </p>
+            <button
+              className="primary"
+              onClick={async () => {
+                const path = await api.chooseProject();
+                if (path) void openProject(path);
+              }}
+            >
+              Choose folder…
+            </button>
+            <button
+              onClick={async () => void openProject(await api.exampleProject())}
+            >
+              Open PackInspect example
+            </button>
+            <div className="section-label spaced">Recent projects</div>
+            {recents.map((path) => (
+              <button
+                className="question"
+                key={path}
+                onClick={() => void openProject(path)}
+              >
+                {path}
+              </button>
+            ))}
+            {error && (
+              <p role="alert" className="error">
+                {error}
+              </p>
+            )}
+          </section>
+        </div>
+      )}
       {chosen && snapshot && (
         <Inspector
           key={chosen.id + snapshot.revision}

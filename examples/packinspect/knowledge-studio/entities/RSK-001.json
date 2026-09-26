@@ -1,0 +1,38 @@
+{
+  "id": "RSK-001",
+  "kind": "Risk",
+  "title": "Bandwidth and thermal headroom",
+  "summary": "Four cameras may saturate transport or exceed the edge thermal envelope.",
+  "status": "open",
+  "confidence": 0.6,
+  "owner": "OWN-001",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-004",
+      "section": "throughput"
+    }
+  ],
+  "relations": [
+    {
+      "type": "blocks",
+      "target": "WP-006"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-001"
+    }
+  ],
+  "details": {
+    "impact": "4",
+    "likelihood": "3",
+    "mitigation": "Transport and thermal soak benchmark"
+  },
+  "repo_url": null,
+  "location": null
+}

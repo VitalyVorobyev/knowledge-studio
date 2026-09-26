@@ -1,0 +1,69 @@
+{
+  "id": "WP-011",
+  "kind": "WorkPackage",
+  "title": "Complete independent acceptance",
+  "summary": "A verifiable engineering outcome with explicit uncertainty.",
+  "status": "planned",
+  "confidence": 0.8,
+  "owner": "OWN-004",
+  "effort": [
+    4.0,
+    6.0
+  ],
+  "outcome": "Published validation dossier for release gate",
+  "work_type": "integration",
+  "validation_criterion": "All accepted requirements linked to evidence",
+  "skill": "Validation / security",
+  "milestone": "MS-003",
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "WP-006"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-009"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-010"
+    },
+    {
+      "type": "implemented_in",
+      "target": "REP-004"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-001"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-003"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-004"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-011"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-004"
+    }
+  ],
+  "details": {},
+  "repo_url": null,
+  "location": null
+}

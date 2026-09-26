@@ -16,6 +16,9 @@ export type Entity = {
   evidence: { source: string; section: string }[];
   relations: Relation[];
   details: Record<string, string>;
+  repo_url: string | null;
+  location:
+    { type: "local"; path: string } | { type: "external"; url: string } | null;
 };
 export type Views = {
   schema_version: number;
@@ -23,7 +26,12 @@ export type Views = {
   planning: Record<string, { start: number; duration: number }>;
 };
 export type Snapshot = {
-  manifest: { schema_version: number; project: string; synthetic: boolean };
+  manifest: {
+    schema_version: number;
+    project: string;
+    synthetic: boolean;
+    planning_origin: string | null;
+  };
   entities: Entity[];
   views: Views;
   backlinks: Record<string, { source: string; type: string }[]>;

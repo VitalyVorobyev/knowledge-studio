@@ -1,0 +1,28 @@
+{
+  "id": "SRC-004",
+  "kind": "Source",
+  "title": "Customer proxy meeting",
+  "summary": "Synthetic source document with stable section anchors.",
+  "status": "accepted",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [],
+  "relations": [],
+  "details": {
+    "file": "meeting.md",
+    "release": "Vertical slice proves the flow with synthetic images; engineering prototype measures physical assumptions; product-ready release requires independent validation.",
+    "setup": "The proxy interprets setup as a full new tray recipe, while engineering measures model fitting only. Timing boundaries need a decision.",
+    "throughput": "A fictional customer proxy asked about 120 parts/min and four cameras to observe seal corners. PM has not reconciled this with the two-camera, 80 parts/min baseline."
+  },
+  "repo_url": null,
+  "location": {
+    "type": "local",
+    "path": "sources/meeting.md"
+  }
+}

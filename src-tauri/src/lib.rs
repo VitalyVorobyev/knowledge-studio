@@ -20,6 +20,12 @@ pub struct Evidence {
     pub section: String,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum SourceLocation {
+    Local { path: String },
+    External { url: String },
+}
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Entity {
     pub id: String,
@@ -38,6 +44,8 @@ pub struct Entity {
     pub evidence: Vec<Evidence>,
     pub relations: Vec<Relation>,
     pub details: BTreeMap<String, String>,
+    pub repo_url: Option<String>,
+    pub location: Option<SourceLocation>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -45,6 +53,7 @@ pub struct Manifest {
     pub schema_version: u32,
     pub project: String,
     pub synthetic: bool,
+    pub planning_origin: Option<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -125,11 +134,8 @@ fn atomic(p: &Path, text: &str) -> Result<()> {
     fs::rename(tmp, p).map_err(|e| e.to_string())
 }
 pub fn validate(manifest: &Manifest, entities: &[Entity], views: &Views) -> Result<()> {
-    if manifest.schema_version != 1 || views.schema_version != 1 {
+    if manifest.schema_version != 2 || views.schema_version != 2 {
         return Err("Unsupported schema version; explicit migration required".into());
-    }
-    if !manifest.synthetic {
-        return Err("This showcase only accepts synthetic workspaces".into());
     }
     let mut ids = BTreeMap::new();
     for e in entities {
@@ -173,17 +179,14 @@ pub fn validate(manifest: &Manifest, entities: &[Entity], views: &Views) -> Resu
             }
         }
         if e.kind == "WorkPackage"
-            && (e.effort.is_none()
-                || e.outcome.as_ref().is_none_or(|x| x.trim().is_empty())
+            && (e.outcome.as_ref().is_none_or(|x| x.trim().is_empty())
                 || e.validation_criterion
                     .as_ref()
                     .is_none_or(|x| x.trim().is_empty())
-                || e.owner.is_none()
-                || e.milestone.is_none()
-                || e.skill.is_none()
                 || e.evidence.is_empty()
-                || ![Some("known"), Some("integration"), Some("research")]
-                    .contains(&e.work_type.as_deref()))
+                || (e.work_type.is_some()
+                    && ![Some("known"), Some("integration"), Some("research")]
+                        .contains(&e.work_type.as_deref())))
         {
             return Err(format!("Incomplete work package: {}", e.id));
         }
@@ -194,6 +197,22 @@ pub fn validate(manifest: &Manifest, entities: &[Entity], views: &Views) -> Resu
                 if ids.get(id).is_none_or(|x| x.kind != kind) {
                     return Err(format!("Invalid {kind} reference on {}", e.id));
                 }
+            }
+        }
+        if e.kind == "Source" && e.location.is_none() {
+            return Err(format!("Missing source location: {}", e.id));
+        }
+        if e.kind != "Source" && e.location.is_some() {
+            return Err(format!("Unexpected source location: {}", e.id));
+        }
+        if let Some(url) = &e.repo_url {
+            if e.kind != "Repository" || !url.starts_with("https://") {
+                return Err(format!("Invalid repository URL: {}", e.id));
+            }
+        }
+        if let Some(SourceLocation::External { url }) = &e.location {
+            if !url.starts_with("https://") {
+                return Err(format!("Invalid source URL: {}", e.id));
             }
         }
         let mut seen = BTreeSet::new();
@@ -289,10 +308,10 @@ impl Store {
         Self { root }
     }
     fn lock(&self) -> Result<Lock> {
-        let dir = self.root.join(".packinspect");
+        let dir = self.root.join(".knowledge-studio");
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let p = dir.join("write.lock");
-        fs::OpenOptions::new().write(true).create_new(true).open(&p).map_err(|_|"Workspace busy. If a process crashed, remove .packinspect/write.lock after closing other instances.".to_string())?;
+        fs::OpenOptions::new().write(true).create_new(true).open(&p).map_err(|_|"Workspace busy. If a process crashed, remove .knowledge-studio/write.lock after closing other instances.".to_string())?;
         Ok(Lock(p))
     }
     pub fn load(&self) -> Result<Snapshot> {
@@ -300,7 +319,7 @@ impl Store {
         self.load_unlocked()
     }
     fn load_unlocked(&self) -> Result<Snapshot> {
-        let journal = self.root.join(".packinspect/transaction.json");
+        let journal = self.root.join(".knowledge-studio/transaction.json");
         if journal.exists() {
             let prior: BTreeMap<String, String> = read(&journal)?;
             for (p, text) in prior {
@@ -308,9 +327,11 @@ impl Store {
             }
             fs::remove_file(journal).map_err(|e| e.to_string())?;
         }
-        let manifest = read(&self.root.join("knowledge/manifest.json"))?;
+        let manifest = read(&self.root.join("knowledge-studio/manifest.json"))?;
         let mut entities = Vec::new();
-        for f in fs::read_dir(self.root.join("knowledge/entities")).map_err(|e| e.to_string())? {
+        for f in
+            fs::read_dir(self.root.join("knowledge-studio/entities")).map_err(|e| e.to_string())?
+        {
             let p = f.map_err(|e| e.to_string())?.path();
             if p.extension().is_some_and(|x| x == "json") {
                 let e: Entity = read(&p)?;
@@ -321,7 +342,7 @@ impl Store {
             }
         }
         entities.sort_by(|a, b| a.id.cmp(&b.id));
-        let views = read(&self.root.join("views/workspace.json"))?;
+        let views = read(&self.root.join("knowledge-studio/views/workspace.json"))?;
         validate(&manifest, &entities, &views)?;
         let mut backlinks: BTreeMap<String, Vec<Backlink>> = BTreeMap::new();
         for e in &entities {
@@ -346,20 +367,29 @@ impl Store {
         }
         let mut documents = BTreeMap::new();
         for e in &entities {
-            if e.kind == "Source" {
-                let file = e
-                    .details
-                    .get("file")
-                    .ok_or(format!("Source {} has no file", e.id))?;
-                if !file.ends_with(".md")
-                    || file.contains('/')
-                    || file.contains('\\')
-                    || file.contains("..")
+            if let Some(SourceLocation::Local { path }) = &e.location {
+                let candidate = Path::new(path);
+                if candidate.is_absolute()
+                    || candidate
+                        .components()
+                        .any(|part| !matches!(part, std::path::Component::Normal(_)))
+                    || !path.ends_with(".md")
                 {
-                    return Err("Source filenames must be local Markdown basenames".into());
+                    return Err(format!(
+                        "Source path must be a project-relative Markdown file: {}",
+                        e.id
+                    ));
                 }
-                let text = fs::read_to_string(self.root.join("sources").join(file))
-                    .map_err(|e| e.to_string())?;
+                let root = self.root.canonicalize().map_err(|err| err.to_string())?;
+                let file = self
+                    .root
+                    .join(candidate)
+                    .canonicalize()
+                    .map_err(|err| format!("{}: {err}", e.id))?;
+                if !file.starts_with(&root) {
+                    return Err(format!("Source escapes project: {}", e.id));
+                }
+                let text = fs::read_to_string(&file).map_err(|err| err.to_string())?;
                 for ev in entities
                     .iter()
                     .flat_map(|item| &item.evidence)
@@ -385,7 +415,7 @@ impl Store {
             hash = hash.wrapping_mul(1099511628211);
         }
         let git = self
-            .git(&["status", "--short", "--", "knowledge", "views", "sources"])
+            .git(&["status", "--short", "--", "knowledge-studio"])
             .unwrap_or_else(|_| "Git unavailable".into());
         Ok(Snapshot {
             manifest,
@@ -396,7 +426,7 @@ impl Store {
             revision: format!("{hash:x}"),
             root: self.root.display().to_string(),
             git,
-            demo_applied: self.root.join(".packinspect/demo.json").exists(),
+            demo_applied: self.root.join(".knowledge-studio/demo.json").exists(),
         })
     }
     pub fn git(&self, args: &[&str]) -> Result<String> {
@@ -426,7 +456,7 @@ impl Store {
                 fs::read_to_string(self.root.join(p)).map_err(|e| e.to_string())?,
             );
         }
-        let journal = self.root.join(".packinspect/transaction.json");
+        let journal = self.root.join(".knowledge-studio/transaction.json");
         atomic(&journal, &json(&old)?)?;
         for (p, text) in files {
             atomic(&self.root.join(p), &text)?;
@@ -451,7 +481,7 @@ impl Store {
         s.entities[i] = entity.clone();
         validate(&s.manifest, &s.entities, &s.views)?;
         self.transaction(BTreeMap::from([(
-            format!("knowledge/entities/{}.json", entity.id),
+            format!("knowledge-studio/entities/{}.json", entity.id),
             json(&entity)?,
         )]))?;
         self.load_unlocked()
@@ -461,7 +491,7 @@ impl Store {
         let s = self.check(revision)?;
         validate(&s.manifest, &s.entities, &views)?;
         self.transaction(BTreeMap::from([(
-            "views/workspace.json".into(),
+            "knowledge-studio/views/workspace.json".into(),
             json(&views)?,
         )]))?;
         self.load_unlocked()
@@ -469,7 +499,10 @@ impl Store {
     pub fn demo(&self, apply: bool, revision: &str) -> Result<Snapshot> {
         let _lock = self.lock()?;
         let mut s = self.check(revision)?;
-        let backup = self.root.join(".packinspect/demo.json");
+        if !s.manifest.synthetic || s.manifest.project != "PackInspect" {
+            return Err("Demo change is only available in the PackInspect example".into());
+        }
+        let backup = self.root.join(".knowledge-studio/demo.json");
         if apply {
             if backup.exists() {
                 return Err("Change request already applied".into());
@@ -478,7 +511,7 @@ impl Store {
             let mut after = BTreeMap::new();
             for e in &mut s.entities {
                 if demo_update(e) {
-                    let p = format!("knowledge/entities/{}.json", e.id);
+                    let p = format!("knowledge-studio/entities/{}.json", e.id);
                     before.insert(
                         p.clone(),
                         fs::read_to_string(self.root.join(&p)).map_err(|e| e.to_string())?,
@@ -584,15 +617,109 @@ fn demo_update(e: &mut Entity) -> bool {
     e.details.insert("change_request".into(), "CR-01".into());
     true
 }
-pub fn default_root() -> PathBuf {
-    std::env::var_os("PACKINSPECT_ROOT")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap()
-                .to_path_buf()
+pub fn demo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("examples/packinspect")
+}
+pub fn migrate_v1(root: &Path) -> Result<()> {
+    let old = root.join("knowledge/manifest.json");
+    let target = root.join("knowledge-studio");
+    if !old.is_file() || target.exists() {
+        return Err(
+            "Expected schema v1 knowledge/manifest.json and no knowledge-studio directory".into(),
+        );
+    }
+    let mut manifest: Manifest = read(&old).or_else(|_| {
+        #[derive(Deserialize)]
+        struct OldManifest {
+            schema_version: u32,
+            project: String,
+            synthetic: bool,
+        }
+        let prior: OldManifest = read(&old)?;
+        Ok::<Manifest, String>(Manifest {
+            schema_version: prior.schema_version,
+            project: prior.project,
+            synthetic: prior.synthetic,
+            planning_origin: None,
         })
+    })?;
+    if manifest.schema_version != 1 {
+        return Err("Only schema v1 can be migrated".into());
+    }
+    let mut views: Views = read(&root.join("views/workspace.json"))?;
+    if views.schema_version != 1 {
+        return Err("Expected schema v1 views".into());
+    }
+    let mut entities = Vec::new();
+    for entry in fs::read_dir(root.join("knowledge/entities")).map_err(|e| e.to_string())? {
+        let path = entry.map_err(|e| e.to_string())?.path();
+        if path.extension().is_some_and(|e| e == "json") {
+            let mut v: serde_json::Value = read(&path)?;
+            let kind = v["kind"].as_str().unwrap_or_default();
+            let location = if kind == "Source" {
+                Some(SourceLocation::Local {
+                    path: format!(
+                        "sources/{}",
+                        v["details"]["file"].as_str().ok_or("Source missing file")?
+                    ),
+                })
+            } else {
+                None
+            };
+            v["repo_url"] = serde_json::Value::Null;
+            v["location"] = serde_json::to_value(location).map_err(|e| e.to_string())?;
+            entities.push(serde_json::from_value::<Entity>(v).map_err(|e| e.to_string())?);
+        }
+    }
+    manifest.schema_version = 2;
+    views.schema_version = 2;
+    validate(&manifest, &entities, &views)?;
+    fs::create_dir_all(target.join("entities")).map_err(|e| e.to_string())?;
+    fs::create_dir_all(target.join("views")).map_err(|e| e.to_string())?;
+    fs::write(target.join("manifest.json"), json(&manifest)?).map_err(|e| e.to_string())?;
+    fs::write(target.join("views/workspace.json"), json(&views)?).map_err(|e| e.to_string())?;
+    for entity in entities {
+        fs::write(
+            target.join(format!("entities/{}.json", entity.id)),
+            json(&entity)?,
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+pub fn init(root: &Path, project: &str) -> Result<()> {
+    if !root.join(".git").exists() {
+        return Err("Project root must be a Git checkout".into());
+    }
+    let dir = root.join("knowledge-studio");
+    if dir.exists() {
+        return Err("knowledge-studio already exists; no files were changed".into());
+    }
+    fs::create_dir_all(dir.join("entities")).map_err(|e| e.to_string())?;
+    fs::create_dir_all(dir.join("views")).map_err(|e| e.to_string())?;
+    fs::write(
+        dir.join("manifest.json"),
+        json(&Manifest {
+            schema_version: 2,
+            project: project.into(),
+            synthetic: false,
+            planning_origin: None,
+        })?,
+    )
+    .map_err(|e| e.to_string())?;
+    fs::write(
+        dir.join("views/workspace.json"),
+        json(&Views {
+            schema_version: 2,
+            layouts: BTreeMap::new(),
+            planning: BTreeMap::new(),
+        })?,
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -600,8 +727,12 @@ mod tests {
     use super::*;
     fn fixture() -> (tempfile::TempDir, Store) {
         let dir = tempfile::tempdir().unwrap();
-        let root = default_root();
-        for name in ["knowledge/entities", "sources", "views"] {
+        let root = demo_root();
+        for name in [
+            "knowledge-studio/entities",
+            "sources",
+            "knowledge-studio/views",
+        ] {
             fs::create_dir_all(dir.path().join(name)).unwrap();
             for f in fs::read_dir(root.join(name)).unwrap() {
                 let p = f.unwrap().path();
@@ -611,8 +742,8 @@ mod tests {
             }
         }
         fs::copy(
-            root.join("knowledge/manifest.json"),
-            dir.path().join("knowledge/manifest.json"),
+            root.join("knowledge-studio/manifest.json"),
+            dir.path().join("knowledge-studio/manifest.json"),
         )
         .unwrap();
         let store = Store::new(dir.path().to_path_buf());
@@ -650,9 +781,9 @@ mod tests {
     fn rejects_invalid_version_effort_and_cycle() {
         let (_d, s) = fixture();
         let mut x = s.load().unwrap();
-        x.manifest.schema_version = 2;
-        assert!(validate(&x.manifest, &x.entities, &x.views).is_err());
         x.manifest.schema_version = 1;
+        assert!(validate(&x.manifest, &x.entities, &x.views).is_err());
+        x.manifest.schema_version = 2;
         let a = x.entities.iter().position(|e| e.id == "WP-001").unwrap();
         x.entities[a].effort = Some([8., 2.]);
         assert!(validate(&x.manifest, &x.entities, &x.views).is_err());
@@ -678,7 +809,7 @@ mod tests {
                 one,
                 fs::read_to_string(
                     s.root
-                        .join(format!("knowledge/entities/{}.json", entity.id))
+                        .join(format!("knowledge-studio/entities/{}.json", entity.id))
                 )
                 .unwrap()
             );
@@ -771,14 +902,84 @@ mod tests {
         assert!(s.load().unwrap_err().contains("Missing document section"));
     }
     #[test]
+    fn explicit_v1_migration_keeps_ids_and_sources() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = demo_root();
+        fs::create_dir_all(dir.path().join("knowledge/entities")).unwrap();
+        fs::create_dir_all(dir.path().join("views")).unwrap();
+        fs::create_dir_all(dir.path().join("sources")).unwrap();
+        let mut manifest: serde_json::Value =
+            read(&root.join("knowledge-studio/manifest.json")).unwrap();
+        manifest["schema_version"] = 1.into();
+        manifest.as_object_mut().unwrap().remove("planning_origin");
+        fs::write(
+            dir.path().join("knowledge/manifest.json"),
+            json(&manifest).unwrap(),
+        )
+        .unwrap();
+        let mut views: serde_json::Value =
+            read(&root.join("knowledge-studio/views/workspace.json")).unwrap();
+        views["schema_version"] = 1.into();
+        fs::write(
+            dir.path().join("views/workspace.json"),
+            json(&views).unwrap(),
+        )
+        .unwrap();
+        for item in fs::read_dir(root.join("knowledge-studio/entities")).unwrap() {
+            let path = item.unwrap().path();
+            let mut v: serde_json::Value = read(&path).unwrap();
+            v.as_object_mut().unwrap().remove("location");
+            v.as_object_mut().unwrap().remove("repo_url");
+            fs::write(
+                dir.path()
+                    .join("knowledge/entities")
+                    .join(path.file_name().unwrap()),
+                json(&v).unwrap(),
+            )
+            .unwrap();
+        }
+        for item in fs::read_dir(root.join("sources")).unwrap() {
+            let path = item.unwrap().path();
+            fs::copy(
+                &path,
+                dir.path().join("sources").join(path.file_name().unwrap()),
+            )
+            .unwrap();
+        }
+        migrate_v1(dir.path()).unwrap();
+        let snap = Store::new(dir.path().to_path_buf()).load().unwrap();
+        assert_eq!(snap.entities.len(), 76);
+        assert_eq!(snap.manifest.schema_version, 2);
+        assert_eq!(snap.documents.len(), 6);
+        assert!(dir.path().join("knowledge/manifest.json").exists());
+    }
+    #[test]
+    fn external_sources_and_unknown_effort_are_valid() {
+        let (_d, s) = fixture();
+        let mut snap = s.load().unwrap();
+        let source = snap
+            .entities
+            .iter_mut()
+            .find(|e| e.id == "SRC-001")
+            .unwrap();
+        source.location = Some(SourceLocation::External {
+            url: "https://example.org/evidence".into(),
+        });
+        let wp = snap.entities.iter_mut().find(|e| e.id == "WP-001").unwrap();
+        wp.effort = None;
+        wp.owner = None;
+        wp.relations.retain(|r| r.kind != "owned_by");
+        assert!(validate(&snap.manifest, &snap.entities, &snap.views).is_ok());
+    }
+    #[test]
     fn journal_restores_interrupted_transaction() {
         let (_d, s) = fixture();
         let x = s.load().unwrap();
-        let p = "knowledge/entities/REQ-001.json";
+        let p = "knowledge-studio/entities/REQ-001.json";
         let before = fs::read_to_string(s.root.join(p)).unwrap();
         let journal = BTreeMap::from([(p.to_string(), before.clone())]);
         fs::write(
-            s.root.join(".packinspect/transaction.json"),
+            s.root.join(".knowledge-studio/transaction.json"),
             json(&journal).unwrap(),
         )
         .unwrap();

@@ -1,0 +1,53 @@
+{
+  "id": "WP-002",
+  "kind": "WorkPackage",
+  "title": "Prove camera transport budget",
+  "summary": "A verifiable engineering outcome with explicit uncertainty.",
+  "status": "active",
+  "confidence": 0.45,
+  "owner": "OWN-002",
+  "effort": [
+    2.0,
+    5.0
+  ],
+  "outcome": "USB3 and GigE comparison report",
+  "work_type": "research",
+  "validation_criterion": "Measure jitter and sustained bandwidth",
+  "skill": "Rust / acquisition / PLC",
+  "milestone": "MS-001",
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-004",
+      "section": "release"
+    },
+    {
+      "source": "SRC-003",
+      "section": "interfaces"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implemented_in",
+      "target": "REP-002"
+    },
+    {
+      "type": "implements",
+      "target": "CAP-002"
+    },
+    {
+      "type": "implements",
+      "target": "REQ-002"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {},
+  "repo_url": null,
+  "location": null
+}

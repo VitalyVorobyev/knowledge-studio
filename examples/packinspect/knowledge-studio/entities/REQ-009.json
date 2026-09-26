@@ -1,0 +1,38 @@
+{
+  "id": "REQ-009",
+  "kind": "Requirement",
+  "title": "Offline inference",
+  "summary": "No cloud dependency during operation.",
+  "status": "accepted",
+  "confidence": 0.8,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "scope"
+    },
+    {
+      "source": "SRC-003",
+      "section": "security"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implements",
+      "target": "CAP-006"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {},
+  "repo_url": null,
+  "location": null
+}

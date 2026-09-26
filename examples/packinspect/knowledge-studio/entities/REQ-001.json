@@ -1,0 +1,38 @@
+{
+  "id": "REQ-001",
+  "kind": "Requirement",
+  "title": "Throughput ≥ 80 parts/min",
+  "summary": "Baseline target pending measurement.",
+  "status": "accepted",
+  "confidence": 0.8,
+  "owner": "OWN-002",
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-001",
+      "section": "slide-08"
+    },
+    {
+      "source": "SRC-004",
+      "section": "throughput"
+    }
+  ],
+  "relations": [
+    {
+      "type": "implements",
+      "target": "CAP-002"
+    },
+    {
+      "type": "owned_by",
+      "target": "OWN-002"
+    }
+  ],
+  "details": {},
+  "repo_url": null,
+  "location": null
+}

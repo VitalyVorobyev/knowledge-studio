@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "PackInspect Knowledge Studio",
+  "productName": "Knowledge Studio",
   "version": "0.1.0",
-  "identifier": "studio.packinspect.synthetic",
+  "identifier": "studio.knowledge.local",
   "build": {
-    "beforeDevCommand": "npm run web",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "bun run web",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "PackInspect Knowledge Studio \u00b7 Synthetic workspace",
+        "title": "Knowledge Studio",
         "width": 1440,
         "height": 940,
         "minWidth": 1000,
@@ -29,7 +29,7 @@
       "app"
     ],
     "category": "DeveloperTool",
-    "shortDescription": "Synthetic Git-native engineering knowledge workbench",
+    "shortDescription": "Git-native project knowledge workbench",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

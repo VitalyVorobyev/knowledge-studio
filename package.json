@@ -1,5 +1,5 @@
 {
-  "name": "packinspect-knowledge-studio",
+  "name": "knowledge-studio",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,12 +11,15 @@
     "test": "vitest run && cargo test --manifest-path src-tauri/Cargo.toml --lib",
     "lint": "tsc -b && prettier --check app *.json *.ts",
     "format": "prettier --write app *.json *.ts",
-    "validate": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- validate",
-    "demo:apply": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- demo apply",
-    "demo:reset": "cargo run --manifest-path src-tauri/Cargo.toml --bin packinspect-cli -- demo reset"
+    "validate:demo": "cargo run --manifest-path src-tauri/Cargo.toml --bin knowledge-studio-cli -- validate examples/packinspect",
+    "demo:apply": "cargo run --manifest-path src-tauri/Cargo.toml --bin knowledge-studio-cli -- demo apply examples/packinspect",
+    "demo:reset": "cargo run --manifest-path src-tauri/Cargo.toml --bin knowledge-studio-cli -- demo reset examples/packinspect",
+    "studio": "cargo run --manifest-path src-tauri/Cargo.toml --bin knowledge-studio-cli --"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-opener": "^2.5.5",
     "@xyflow/react": "^12.0.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",

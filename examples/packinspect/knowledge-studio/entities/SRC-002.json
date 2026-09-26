@@ -1,0 +1,28 @@
+{
+  "id": "SRC-002",
+  "kind": "Source",
+  "title": "Legacy integration notes",
+  "summary": "Synthetic source document with stable section anchors.",
+  "status": "accepted",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [],
+  "relations": [],
+  "details": {
+    "acquisition": "A legacy two-camera USB3 acquisition component may be reusable. No four-camera synchronization or long-duration thermal measurements exist.",
+    "file": "legacy-notes.md",
+    "plc": "A simulated PLC uses 24 V trigger and reject acknowledgement. Maximum reject delay budget: 150 ms. No real device is connected.",
+    "repositories": "Four fictional repositories separate acquisition, inspection, operator experience and validation. No repository URLs point to company infrastructure."
+  },
+  "repo_url": null,
+  "location": {
+    "type": "local",
+    "path": "sources/legacy-notes.md"
+  }
+}

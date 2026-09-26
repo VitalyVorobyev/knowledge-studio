@@ -1,0 +1,37 @@
+{
+  "id": "MS-003",
+  "kind": "Milestone",
+  "title": "Product-ready release",
+  "summary": "Gate requires evidence, not just completion of tasks.",
+  "status": "planned",
+  "confidence": 0.75,
+  "owner": null,
+  "effort": null,
+  "outcome": null,
+  "work_type": null,
+  "validation_criterion": null,
+  "skill": null,
+  "milestone": null,
+  "evidence": [
+    {
+      "source": "SRC-004",
+      "section": "release"
+    }
+  ],
+  "relations": [
+    {
+      "type": "depends_on",
+      "target": "WP-011"
+    },
+    {
+      "type": "depends_on",
+      "target": "WP-012"
+    }
+  ],
+  "details": {
+    "gate": "Independent validation and security review accepted",
+    "target_date": "2027-03-26"
+  },
+  "repo_url": null,
+  "location": null
+}
